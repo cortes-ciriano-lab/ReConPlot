@@ -1,5 +1,5 @@
 Package: GenomicRearrangementPlot
-Title: GenomicRearrangementPlot: an R package to visualize complex genome rearrangement profiles.
+Title: GenomicRearrangementPlot: an R package to visualize complex genome rearrangement profiles. 
 Version: 0.1
 Authors@R: 
     person("Jose", "Espejo Valle-Inclan", , "jespejo@ebi.ac.uk", role = c("aut", "cre"),
