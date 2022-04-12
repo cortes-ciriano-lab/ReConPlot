@@ -1,0 +1,14 @@
+Package: GenomicRearrangementPlot
+Title: GenomicRearrangementPlot: an R package to visualize complex genome rearrangement profiles.
+Version: 0.1
+Authors@R: 
+    person("Jose", "Espejo Valle-Inclan", , "jespejo@ebi.ac.uk", role = c("aut", "cre"),
+           comment = c(ORCID = "0000-0002-4857-5984"))
+    person("Isidro", "Cortes-Ciriano", , "icortes@ebi.ac.uk", role = c("aut", "cre"),
+           comment = c(ORCID = "0000-0002-2036-494X"))
+Description: GenomicRearrangementPlot provides functionalities to depict copy number and structural rearrangement profiles, including inter- and intrachromosomal structural variants. These functionalities are particularly useful to study complex genomic rearrangements in cancer genomes.
+License: free for academic use only. If you are not a member of a public funded academic and/or education and/or research institution you must obtain a commercial license from EMBL Enterprise Management GmbH (EMBLEM); please email EMBLEM (info@embl-em.de).
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.1.2.9000
+Depensds: R (>= 4.1.0),ggplot2,dplyr,tidyr,grid,gridExtra,ggthemes,karyoploteR,cowplot,ggplotify
