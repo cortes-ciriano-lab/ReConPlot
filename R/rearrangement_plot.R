@@ -1,6 +1,3 @@
-
-
-
 #--------------------------------------------------------------------------------------------------------------------------
 formatter1000 <- function(x){ 
   x/1000000 
@@ -32,11 +29,10 @@ options(scipen=999)
 #' @param title Title of the plot. Defaults to "".
 #' @param genes Vector of genes (HUGO gene names) to be shown on the plot. Defaults to NULL. 
 #' @param chr_selection Chromosomes, start and end positions to be depicted. Defaults to NULL.
-#' @param scaling_cn_SVs Relative dimension of the panel representing the SVs with respect to the copy number profile XX. Defaults to 1/6.
-#' @param scale_separation_SV_type_labels Separatation (denoted as a fraction of the y axis XXX) between the SV labels/legend. Defaults to 1/12.
-#' @param pos_SVtype_description Position for the SV labels/legend on the y axis. Defaults to 10000000.
+#' @param scaling_cn_SVs Relative dimension of the panel representing the SVs with respect to the copy number profile. Defaults to 1/6.
+#' @param scale_separation_SV_type_labels Separatation (denoted as a fraction of the y axis XXX) between the SV labels/legend. Defaults to 1/18.
+#' @param pos_SVtype_description Position for the SV labels/legend on the y axis. Defaults to 1000000.
 #' @param window extra spacing on the x axis around the leftmost and rightmost breakpoints detected in the chromosomes selected unless a specific start and end positions for the plot are input.
-#' @param xscale Scale for the x axis. Defaults to 10*10^6 to put the x axis in Mbp.
 #' @param percentage_increase_y_axis Relative percentage to increase the distance of the y axis. XX
 #' @param legend_SV_types Whether to show the legend for the SV types or not. Defaults to TRUE.
 #' @param size_chr_labels Size of the chromsosome labels. Defaults to 7pt (use 5-7pt for publication-ready figures).
@@ -56,42 +52,61 @@ options(scipen=999)
 #' @param scale_ticks Spacing of breaks in the x axis (in bp). Defaults to 20000000 (i.e., 20Mb). 
 #' @examples TODO
 #' @export
-rearrangement_plot <- function(sv,cnv,
+
+####' @param xscale Scale for the x axis. Defaults to 10*10^6 to put the x axis in Mbp.
+rearrangement_plot <- function(sv,
+							   cnv,
                         title="",
-                        genes=NULL, # genes to highlight in plot
+                        genes=NULL, 
                         chr_selection = NULL,
                         scaling_cn_SVs = 1/6, 
-                        scale_separation_SV_type_labels = 1/12,
-                        pos_SVtype_description = 10000000, #where the SV types labels are
-                        window=10000000 , # extra copy number to show on the sides of the extreme SVs
-                        xscale=10*10^6,
+                        scale_separation_SV_type_labels = 1/18,
+                        pos_SVtype_description = 1000000, 
+                        window=10000000 , 
+                        #xscale=10*10^6,
                         percentage_increase_y_axis=0.1,
                         legend_SV_types=TRUE,
                         size_chr_labels=7,
                         size_title = 7,
+						lower_limit_karyotype = -0.7, 
+						upper_limit_karyotype = -0.2,
                         colour_band2= "antiquewhite1", colour_band1="grey86",
                         colour_DEL = "orange", colour_h2hINV="forestgreen", colour_DUP="darkblue", colour_t2tINV="black",
                         size_gene_label =2.2,
                         color_minor_cn="darkred",
                         curvature_intrachr_SVs = -0.3,
                         curvature_interchr_SVs = -0.35,
-                        max.cnv = 10, # cap on the total copy number (for the minor we do not need as the minor will never be very high)
+                        max.cnv = 8, 
                         npc_now = .00625,
-                        scale_ticks=20000000){  ## the spacing of breaks in x axis
+                        scale_ticks=20000000){  
  
+  #----------------------------------------------------------------
+  # check input data 
+  #----------------------------------------------------------------
+	if ( sum(!( chr_selection$chr %in% paste0("chr",c(1:22,"X","Y"))))  >0){
+		stop("Error: the input data contains non-supported chromosomes. Supported chromosomes include the autosomes (chr1-chr22) and sexual chromsomes (chrX and chrY)")
+	}
+	if ( sum( ! c(sv$chr1, sv$chr2) %in% paste0("chr",c(1:22,"X","Y"))) >0){
+		 stop("Error: the input SV data contains non-supported chromosomes. Supported chromosomes include the autosomes (chr1-chr22) and sexual chromsomes (chrX and chrY)")
+	}
+
+	if ( sum( !( cnv$chr %in% paste0("chr",c(1:22,"X","Y")) >0))){
+		 stop("Error: the input copy number data contains non-supported chromosomes. Supported chromosomes include the autosomes (chr1-chr22) and sexual chromsomes (chrX and chrY)")
+	}
+  required_SV_columns = c("sample",  "chr1"  , "pos1" ,  "chr2"  , "pos2" ,  "strands")
+  if (sum (! (required_SV_columns %in% names(sv)) ) > 0 ){
+	  stop("Error: the input SV dataframe is missing required columns. The required columns are: sample, chr1, pos1, chr2, pos2 and strands")
+  }
+  required_cn_columns = c("chr", "start", "end", "Total_copy_number","Tumour_minor" )
+  if (sum (! (required_cn_columns %in% names(cnv)) ) > 0 ){
+	   stop("Error: the input copy number dataframe is missing required columns. The required columns are: chr, start, end, Total_copy_number, and Tumour_minor")
+  }
+  if(is.data.frame(cnv) == FALSE){stop("Error: the copy number data must be input in dataframe format")}
+  if(is.data.frame(sv) == FALSE){stop("Error: the SV data must be input in dataframe format")}
+
   #----------------------------------------------------------------
   # information for the karyotype
   #----------------------------------------------------------------
- # karyotype_data = readRDS("~/Downloads/chr_info_hg38.rds")
- # names(karyotype_data)[1] = "chr"
-##  karyotype_data$chr = gsub("chr","",karyotype_data$chr)
- # karyotype_data$color[karyotype_data$gieStain == "gneg"] = "white"
- # karyotype_data$color[karyotype_data$gieStain == "gpos25"] = "grey75"
- # karyotype_data$color[karyotype_data$gieStain == "gpos50"] = "grey50"
- # karyotype_data$color[karyotype_data$gieStain == "gpos75"] = "grey25"
- # karyotype_data$color[karyotype_data$gieStain == "gpos100"] = "grey0"
- # karyotype_data$color[karyotype_data$gieStain == "acen"] = "red"
-
   karyotype_data_now = karyotype_data[karyotype_data$chr %in% chr_selection$chr,]
   karyotype_data_now$y = rep(1,nrow(karyotype_data_now))
   if(nrow(karyotype_data_now)<7){karyotype_data_annot=karyotype_data_now}else{
@@ -109,13 +124,13 @@ rearrangement_plot <- function(sv,cnv,
   
   if (nrow(sv) >= 1){
     sv$colour <- apply(sv, 1, function(x){
-      if (x["ori"] == "+-"){
+      if (x["strands"] == "+-"){
         c = colour_DEL
-      } else if (x["ori"] == "++"){
+      } else if (x["strands"] == "++"){
         c = colour_h2hINV
-      } else if (x["ori"] == "--"){
+      } else if (x["strands"] == "--"){
         c = colour_t2tINV
-      } else if (x["ori"] == "-+"){
+      } else if (x["strands"] == "-+"){
         c = colour_DUP
       } 
       c
@@ -130,7 +145,6 @@ rearrangement_plot <- function(sv,cnv,
       c
     })
   }
-
   
   #----------------------------------------------------------------
   # get intrachr SVs
@@ -139,7 +153,6 @@ rearrangement_plot <- function(sv,cnv,
   for(i in chr_selection$chr){
     now = subset(sv, chr1 == i & chr2 == i)
     if(nrow(now)>0){intraSV = rbind(intraSV, now)}
-    
   }
   
   #----------------------------------------------------------------
@@ -152,7 +165,6 @@ rearrangement_plot <- function(sv,cnv,
   } else {
     interFlag = FALSE
   }
-  #print(interFlag)
   
   #--------------
   # get the x axis limits for all chrs
@@ -183,8 +195,6 @@ rearrangement_plot <- function(sv,cnv,
       chr_selection$end[i] = end.now + window
     }
   }
-  
-  
 
   if (interFlag){
     
@@ -269,17 +279,14 @@ rearrangement_plot <- function(sv,cnv,
   
   # cnv.plot$chr = cnv.plot$chr
   # those with very high copy number value, modify
-  cnv.plot$Tumour_Major[which(cnv.plot$Tumour_Major >= max.cnv)] = max.cnv
-  max_y = max.cnv # max(c( cnv.plot$Tumour_Major)) # max copy number value
+  cnv.plot$Total_copy_number[which(cnv.plot$Total_copy_number >= max.cnv)] = max.cnv
+  max_y = max.cnv # max(c( cnv.plot$Total_copy_number)) # max copy number value
   max_y_rectagle = max_y
   max_y = max_y + (max_y* percentage_increase_y_axis) # add 10% to y axis
   max_y_svs_1 = max_y  + ( (scaling_cn_SVs) * max_y)
   max_y_svs_2 = max_y  + ( (scaling_cn_SVs) * max_y) + ( (scaling_cn_SVs) * max_y)
   max_y_svs_3 = max_y  + ( (scaling_cn_SVs) * max_y) + ( (scaling_cn_SVs) * max_y) + ( (scaling_cn_SVs) * max_y) # for the interchr with chrs not displayed
   # max_y_svs_1 = max_y - 0.5
-  
-  #chr_selection$chr=c(main.chr, unique(cnv.plot$chr[cnv.plot$chr != main.chr]))
-  
   
   #------------------------------------------------------------------------------------
   # plotting
@@ -290,7 +297,7 @@ rearrangement_plot <- function(sv,cnv,
   # add background
   seq1=rep(seq(0,max_y_rectagle-1,2), each=length(chr_selection$chr))
   seq2=rep(seq(1,max_y_rectagle,2),each=length(chr_selection$chr))
-  rectangulo = data.frame(xmin=0,xmax=NA,
+  rectangle = data.frame(xmin=0,xmax=NA,
                           ymin=seq1,
                           ymax=seq2,
                           chr=factor(rep(chr_selection$chr,length(seq1)/length(chr_selection$chr)),levels=chr_selection$chr))
@@ -298,38 +305,26 @@ rearrangement_plot <- function(sv,cnv,
   # ## plot background
   p = p + geom_rect(aes(xmin = -Inf, xmax = Inf, ymin = ymin, ymax = ymax, group=chr),
                     alpha = .5, fill = colour_band1,
-                    data = rectangulo,
+                    data = rectangle,
                     inherit.aes = F)
 
   p = p + geom_rect(aes(xmin = -Inf, xmax = Inf, ymin = ymin+1, ymax = ymax+1, group=chr),
                     alpha = .5, fill = colour_band2,
-                    data = rectangulo,
+                    data = rectangle,
                     inherit.aes = F)
-  
-  # for(j in seq(0,max_y_rectagle-1,2)){
-  # p = p + annotate("rect", xmin = -Inf, xmax = Inf, ymin = j, ymax = j+1,
-  #                  alpha = 1,fill = colour_band2)
-  # }
-  # 
-  # for(j in seq(1,max_y_rectagle,2)){
-  #   p = p + annotate("rect", xmin = -Inf, xmax = Inf, ymin = j, ymax = j+1,
-  #                    alpha = 1,fill = colour_band1)
-  # }
-  
-  
   ## plot karyotype
   p = p + geom_rect(data=karyotype_data_now,
-                    mapping = aes(xmin = start, xmax = end,   ymin = -0.7, ymax = -0.2,group=chr),
+                    mapping = aes(xmin = start, xmax = end,   ymin = lower_limit_karyotype, ymax = upper_limit_karyotype,group=chr), # can change the default values for karyotype
                     fill = karyotype_data_now$color,color="black",size=.1)
   
   
   ## plot copy number
   p = p +
-    geom_segment(aes(x = start, y = Tumour_Minor, xend = end, 
-                     yend = Tumour_Minor, group=chr), # ICC group
+    geom_segment(aes(x = start, y = Tumour_minor, xend = end, 
+                     yend = Tumour_minor, group=chr), # ICC group
                  data = cnv.plot[cnv.plot$chr %in% chr_selection$chr,], colour=color_minor_cn,size=1) +
-    geom_segment(aes(x = start, y = Tumour_Major, xend = end, 
-                     yend = Tumour_Major,  group=chr), # ICC group
+    geom_segment(aes(x = start, y = Total_copy_number, xend = end, 
+                     yend = Total_copy_number,  group=chr), # ICC group
                  data = cnv.plot[cnv.plot$chr %in% chr_selection$chr,], colour="black",size=1) +
     # facet_wrap(. ~ factor(chr, levels = chr_selection$chr), #c("9","5","7")),   #c(main.chr, unique(cnv.plot$chr[cnv.plot$chr != main.chr]))), 
     #            strip.position = "bottom", nrow = 1, scales="free_x"
@@ -358,23 +353,18 @@ rearrangement_plot <- function(sv,cnv,
     labs(x = "", y = "Copy number")  +
     coord_cartesian(clip = "off", expand=0) + # ICC  
     #ylim(c(0,max_y),expand) + 
-    scale_y_continuous(limits = c(-0.8,max_y_svs_3+0.5), expand = .2, breaks=seq(0,max_y,2)) + 
+    scale_y_continuous(limits = c(lower_limit_karyotype - 0.05,max_y_svs_3+0.5), expand = .2, breaks=seq(0,max_y,2)) + 
     scale_x_continuous(labels=formatter1000, 
                        breaks=scaler(scale_ticks)) 
   
   # add lines where the SVs go
   p = p + geom_abline(slope = 0, intercept=max_y_svs_1, colour="black", size=.25)
   p = p + geom_abline(slope = 0, intercept=max_y_svs_2, colour="black", size=.25)
-  
-
 
   #----------------------------------------------------------------------------
   # highlight genes
   #----------------------------------------------------------------------------
   if(!is.null(genes)){
-    #gene_coord = read.table("Homo_sapiens.GRCh38.93.gene.coord_strand_name.bed", header=F, sep="\t"); head(gene_coord)
-    #names(gene_coord) = c("chr", "start", "end", "strand", "gene")
-    #gene_coord$chr = gsub("chr","",gene_coord$chr)
     for(gene in genes){
       gene_coord_now = gene_coord[gene_coord$gene==gene,]
 	  # are the genes to be plotted in the selected chromosomes?
@@ -390,8 +380,6 @@ rearrangement_plot <- function(sv,cnv,
                      y=0, #max_y_svs_2 + (max_y_svs_3-max_y_svs_2)/2, 
                      yend=max_y_svs_3, curvature=0,  size=0.25, colour="green",alpha=.8)
         
-         
-      
         # # add text annotation
         dat_text <- data.frame(label = gene,
                                chr= factor(gene_coord_now$chr,levels = chr_selection$chr),
@@ -400,9 +388,6 @@ rearrangement_plot <- function(sv,cnv,
         p = p + geom_text( data    = dat_text, mapping = aes(x= pos, y = y, label = label), size=size_gene_label ,fontface="italic")
         # add point
         p = p + geom_point( data= dat_text, mapping = aes(x= pos, y = max_y_svs_3), size=.5 ,colour="darkblue")
-        
-        
-        
       }
     }
 	}
@@ -452,16 +437,11 @@ rearrangement_plot <- function(sv,cnv,
                      x=intraSV$pos1[i], xend=intraSV$pos1[i], 
                      y=0, yend=max_y_svs_3-0.2, curvature=0,  size=0.1, colour=intraSV$colour[i]) 
         # add diagonal line on top
+		  x_range = (chr_selection$end[which(chr_selection$chr==intraSV$chr1[i])] - chr_selection$start[which(chr_selection$chr==intraSV$chr1[i])]) * 0.05
         p = p +
           geom_curve(data = data.frame(cov = 1, chr = intraSV$chr1[i]),
-                     x=intraSV$pos1[i], xend=intraSV$pos1[i]+2000000,
+                     x=intraSV$pos1[i], xend=intraSV$pos1[i]+x_range, #2000000,
                      y=max_y_svs_3-0.2, yend= max_y_svs_3, angle=45, curvature=0,  size=0.1, colour=intraSV$colour[i])
-        # add text annotation
-        # dat_text <- data.frame(label =intraSV$chr1[i], # paste(intraSV$chr1[i],intraSV$pos1[i]), 
-        #                        chr= factor(intraSV$chr1[i],levels = chr_selection$chr),
-        #                        pos=intraSV$pos1[i], y= max_y_svs_3
-        # )
-        #p = p + geom_text( data    = dat_text, mapping = aes(x= pos, y = y, label = label),size=2 )
         
       }
       
@@ -472,27 +452,18 @@ rearrangement_plot <- function(sv,cnv,
                      x=intraSV$pos2[i], xend=intraSV$pos2[i],
                      y=0, yend=max_y_svs_3-0.2, curvature=0,  size=0.1, colour=intraSV$colour[i])
         # add diagonal line on top
+		  x_range = (chr_selection$end[which(chr_selection$chr==intraSV$chr1[i])] - chr_selection$start[which(chr_selection$chr==intraSV$chr1[i])]) * 0.05
         p = p +
           geom_curve(data = data.frame(cov = 1, chr = intraSV$chr1[i]),
-                     x=intraSV$pos2[i], xend=intraSV$pos2[i]-2000000,
+                     x=intraSV$pos2[i], xend=intraSV$pos2[i]-x_range, #2000000,
                      y=max_y_svs_3-0.2, yend=max_y_svs_3 , angle=45, curvature=0,  size=0.1, colour=intraSV$colour[i])
-        # # add text annotation
-        # dat_text <- data.frame(label = intraSV$chr1[i], #paste(intraSV$chr1[i],intraSV$pos2[i]), 
-        #                        chr= factor(intraSV$chr1[i],levels = chr_selection$chr),
-        #                        pos=intraSV$pos2[i], y= max_y_svs_3
-        # )
-        #p = p + geom_text( data    = dat_text, mapping = aes(x= pos, y = y, label = label), size=2 )
       }
     }
   }
   
-
-  
-  
   #----------------------------------------------------------------
   # plot interchr SVs involving chrs in levels_chrs
   #----------------------------------------------------------------
-  
   if (interFlag){
     # # first those involving the middle chromosome  ## missing those with other chrs
     idx= which(interSV$chr1 %in% chr_selection$chr &  interSV$chr2 %in% chr_selection$chr)
@@ -517,13 +488,10 @@ rearrangement_plot <- function(sv,cnv,
       gap = (total_chr_size*npc_now) 
       
       for (i in 1:nrow(interSV)){  ## check as well that the chrs interact with the selected one!
-        
         # in whcih position of the chr list we find the main chr?
         # we assume as main chr the first in the list of chrs
         position_chr_1 = which(chr_selection$chr == interSV$chr1[i])
         position_chr_2 = which(chr_selection$chr == interSV$chr2[i])
-        
-        # chrs_now = interSV[i,c("chr1","chr2")]
         
         # now define which chr is the leftmost in the plot (that is, in chr_selection$chr), so we always draw SVs to the right
         #if (position_chr_1 < position_chr_2){} # the first chr in the SV object is the leftmost, no need to do anything
@@ -589,16 +557,11 @@ rearrangement_plot <- function(sv,cnv,
                        x=intraSV$pos2[i], xend=intraSV$pos2[i],
                        y=0, yend=max_y_svs_3-0.2, curvature=0,  size=0.1, colour=intraSV$colour[i])
           # add diagonal line on top
+		  x_range = (chr_selection$end[which(chr_selection$chr==intraSV$chr1[i])] - chr_selection$start[which(chr_selection$chr==intraSV$chr1[i])]) * 0.05
           p = p +
             geom_curve(data = data.frame(cov = 1, chr = intraSV$chr2[i]),
-                       x=intraSV$pos2[i], xend=intraSV$pos2[i]-2000000,
+                       x=intraSV$pos2[i], xend=intraSV$pos2[i]-x_range, #2000000,
                        y=max_y_svs_3-0.2, yend=max_y_svs_3 , angle=45, curvature=0,  size=0.1, colour=intraSV$colour[i])
-          # # add text annotation
-          # dat_text <- data.frame(label = intraSV$chr2[i], #paste(intraSV$chr2[i],intraSV$pos2[i]), 
-          #                        chr= factor(intraSV$chr2[i],levels = chr_selection$chr),
-          #                        pos=intraSV$pos2[i], y= max_y_svs_3
-          # )
-          #p = p + geom_text( data    = dat_text, mapping = aes(x= pos, y = y, label = label), size=2 )
         }
         
         # the rightmost breakpoint is outside of the range
@@ -609,27 +572,15 @@ rearrangement_plot <- function(sv,cnv,
                        x=intraSV$pos1[i], xend=intraSV$pos1[i],
                        y=0, yend=max_y_svs_3-0.2, curvature=0,  size=0.1, colour=intraSV$colour[i])
           # add diagonal line on top
+		  x_range = (chr_selection$end[which(chr_selection$chr==intraSV$chr1[i])] - chr_selection$start[which(chr_selection$chr==intraSV$chr1[i])]) * 0.05
           p = p +
             geom_curve(data = data.frame(cov = 1, chr = intraSV$chr1[i]),
-                       x=intraSV$pos1[i], xend=intraSV$pos1[i]-2000000,
+                       x=intraSV$pos1[i], xend=intraSV$pos1[i]-x_range, #2000000,
                        y=max_y_svs_3-0.2, yend=max_y_svs_3 , angle=45, curvature=0,  size=0.1, colour=intraSV$colour[i])
-          # # add text annotation
-          # dat_text <- data.frame(label = intraSV$chr1[i], #paste(intraSV$chr1[i],intraSV$pos1[i]), 
-          #                        chr= factor(intraSV$chr1[i],levels = chr_selection$chr),
-          #                        pos=intraSV$pos1[i], y= max_y_svs_3
-          # )
-          #p = p + geom_text( data    = dat_text, mapping = aes(x= pos, y = y, label = label), size=2 )
         }
-        
-        
       }
     }
   }
-  
-  
-  
-  
-  
   
   #----------------------------------------------------------------
   # plot lines with ticks for interchr SVs involving chrs not displayed
@@ -652,16 +603,11 @@ rearrangement_plot <- function(sv,cnv,
                        x=interSV_other_chrs$pos2[i], xend=interSV_other_chrs$pos2[i],
                        y=0, yend=max_y_svs_3-0.2, curvature=0,  size=0.1, colour=interSV_other_chrs$colour[i])
           # add diagonal line on top
+		  x_range = (chr_selection$end[which(chr_selection$chr==interSV_other_chrs$chr2[i])] - chr_selection$start[which(chr_selection$chr==interSV_other_chrs$chr2[i])]) * 0.05
           p = p +
             geom_curve(data = data.frame(cov = 1, chr = interSV_other_chrs$chr2[i]),
-                       x=interSV_other_chrs$pos2[i], xend=interSV_other_chrs$pos2[i]-2000000,
+                       x=interSV_other_chrs$pos2[i], xend=interSV_other_chrs$pos2[i]-x_range, #2000000,
                        y=max_y_svs_3-0.2, yend=max_y_svs_3 , angle=45, curvature=0,  size=0.1, colour=interSV_other_chrs$colour[i])
-          # # add text annotation
-          # dat_text <- data.frame(label = interSV_other_chrs$chr2[i], #paste(interSV_other_chrs$chr2[i],interSV_other_chrs$pos2[i]), 
-          #                        chr= factor(interSV_other_chrs$chr2[i],levels = chr_selection$chr),
-          #                        pos=interSV_other_chrs$pos2[i], y= max_y_svs_3
-          # )
-          #p = p + geom_text( data    = dat_text, mapping = aes(x= pos, y = y, label = label), size=2 )
         }
       }
       
@@ -675,22 +621,17 @@ rearrangement_plot <- function(sv,cnv,
         max_pos_chr1 =  max(cnv.plot[cnv.plot$chr==interSV_other_chrs$chr1[i],"end"])
         in_range_chr1 = (interSV_other_chrs$pos1[i] > min_pos_chr1 & interSV_other_chrs$pos1[i] < max_pos_chr1)
         if( in_range_chr1){
-          ## add vertical line 
+          # add vertical line 
           p = p +
             geom_curve(data = data.frame(cov = 1, chr = interSV_other_chrs$chr1[i]),
                        x=interSV_other_chrs$pos1[i], xend=interSV_other_chrs$pos1[i],
                        y=0, yend=max_y_svs_3-0.2, curvature=0,  size=0.1, colour=interSV_other_chrs$colour[i])
           # add diagonal line on top
+		  x_range = (chr_selection$end[which(chr_selection$chr==interSV_other_chrs$chr1[i])] - chr_selection$start[which(chr_selection$chr==interSV_other_chrs$chr1[i])]) * 0.05
           p = p +
             geom_curve(data = data.frame(cov = 1, chr = interSV_other_chrs$chr1[i]),
-                       x=interSV_other_chrs$pos1[i], xend=interSV_other_chrs$pos1[i]-2000000,
+                       x=interSV_other_chrs$pos1[i], xend=interSV_other_chrs$pos1[i]-x_range, #2000000,
                        y=max_y_svs_3-0.2, yend=max_y_svs_3 , angle=45, curvature=0,  size=0.1, colour=interSV_other_chrs$colour[i])
-          # # add text annotation
-          # dat_text <- data.frame(label = interSV_other_chrs$chr1[i], #paste(interSV_other_chrs$chr1[i],interSV_other_chrs$pos1[i]), 
-          #                        chr= factor(interSV_other_chrs$chr1[i],levels = chr_selection$chr),
-          #                        pos=interSV_other_chrs$pos1[i], y= max_y_svs_3
-          # )
-          #p = p + geom_text( data    = dat_text, mapping = aes(x= pos, y = y, label = label), size=2 )
         }
       }
     }
@@ -698,9 +639,7 @@ rearrangement_plot <- function(sv,cnv,
     
   }
   
-
-  
-  # add SV type description (Add at the end so it is on top of lines)
+  # add SV type description (add at the end so it is on top of lines)
   if(legend_SV_types){
   separation_labels= (scale_separation_SV_type_labels) * max_y
   dat_text <- data.frame(label = c("t2tINV (-/-)","h2hINV (+/+)","DUP (-/+)","DEL (+/-)"),
@@ -716,21 +655,8 @@ rearrangement_plot <- function(sv,cnv,
   p = p + theme(axis.title.y = element_text(hjust=0.2))
   }
   
-  # to remove the vertical white lines:
+  # to remove vertical white lines:
   p = p + theme(panel.grid.minor = element_line(colour = NA))
-  
-  
-  # ## plot background
-  # p = p + geom_rect(aes(xmin = -Inf, xmax = Inf, ymin = ymin, ymax = ymax, group=chr),
-  #                   alpha = 1, fill = colour_band1,
-  #                   data = rectangulo,
-  #                   inherit.aes = F) 
-  # 
-  # p = p + geom_rect(aes(xmin = -Inf, xmax = Inf, ymin = ymin+1, ymax = ymax+1, group=chr),
-  #                   alpha = 1, fill = colour_band2,
-  #                   data = rectangulo,
-  #                   inherit.aes = F) 
-  
   
 
   
