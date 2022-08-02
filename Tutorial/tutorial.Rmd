@@ -1,0 +1,282 @@
+---
+title: "Visualizing genomic rearrangements using the R package *GenomicRearrangementPlot*"
+author: "José Espejo Valle-Inclán and Isidro Cortes-Ciriano*"
+date: "07/05/2022"
+contact: icortes@ebi.ac.uk
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Complex genomic rearrangements in cancer
+Complex genome aberrations are pervasive across diverse cancer types, and are often implicated in tumour development and therapeutic resistance. The study of genomic aberrations in cancer has been facilitated by the advent of next generation sequencing. Changes in the structure and number of chromosomes is indicated by the presence of somatic copy number profiles and structural variants (SVs).
+
+Visualization of SVs and copy number aberrations is often required to identify the genomic instability mechanisms underpinning the observed patterns and to interpret the functional consequences of genomic alterations, such as the loss of tumour suppressors or the amplification of oncogenes. Currently, there exist several types of visualizations to study genomic rearrangements. These include Circos plots, in which the genome is displayed as a circle and somatic alterations are shown in concentric circular tracks, and 2-dimensional genomic rearrangement profiles, in which the copy number profile and SVs mapping to one or multiple chromosomes are displayed side by side. Whereas no single visualization can encompass the complexity of complex genomic aberrations observed in cancer, genomic rearrangement profiles are very useful to interpret cancer genomics data and report the results of genomics analysis in publications. Yet, libraries for the visualization of genomic rearrangement profiles are lacking, which hampers research and the reproducibility of scientific results.
+
+## *GenomicRearrangementPlot*
+Here, we present the R package *GenomicRearrangementPlot*, which provides functionalities for the visualization of copy number profiles and SVs. The package relies on public packages, including the popular ggplot2, thus allowing further customization of the plots.
+
+To visualize genomic rearrangement profiles, *GenomicRearrangementPlot* requires structural variation and copy number data in the commonly used bed format. For SVs, *GenomicRearrangementPlot* uses breakend notation to facilitate compatibility with any SV caller conforming with best practices for reporting SVs in vcf format.
+While the primary focus of *GenomicRearrangementPlot* is the visualization of complex somatic copy number and SVs in the context of cancer, the functionalities provided can be used to visualize genomics data from non-cancer samples, such as somatic aberrations detected in normal tissues, single-cell whole-genome data or others. However, note that at present *GenomicRearrangementPlot* only supports the build of the human reference genome GRCh38. 
+
+## Examples
+In the next section we provide examples of the functionalities of *GenomicRearrangementPlot* and provide best practices to generate high-quality plots.
+First, we load the package.
+```{r}
+library(GenomicRearrangementPlot)
+library(ggplot2)
+```
+
+Next, we load test data provided with the package, which corresponds to a human glioblastoma.
+```{r}
+data(test_data)
+ls()
+```
+
+The information required for the copy number data is:
+
+```{r}
+print(head(cn_data))
+```
+
+and for the structural variants:
+
+```{r}
+print(head(sv_data))
+```
+
+The main function of the package is *rearrangement_plot*. This function generates a rearrangement plot for the genomic regions defined above in the *chr_selection* data.frame. 
+In addition to SV and copy number information, it is necessary to indicate which genomic regions are to be displayed. This is defined using a data.frame indicating the chromosomes, as well as the start and end positions for each chromosome. See below for an example.
+If the entire chromosome is to be displayed, the start position needs to be set to 0, and the end position can be set to a value higher than the lenght of human chromosomes, e.g. 250Mbp (the size of chromosome 1 is ~249Mbp).
+
+```{r, echo=TRUE}
+chrs=c("chr10")
+chr_selection = data.frame(
+  chr=chrs,
+  start=rep(0 ,length(chrs)),
+  end=rep (250000000, length(chrs))
+)
+```
+
+Once the regions of interest is defined, we can generate the rearrangement plot. For example, we can plot the genomic rearrangement profile for chromosome 10:
+
+```{r, echo=TRUE, fig.width = (6/2.4), fig.height=(5/2.4), fig.align='center'}
+plot = rearrangement_plot( sv_data,
+cn_data,
+chr_selection=chr_selection,
+legend_SV_types=T,
+title="Example")
+
+print(plot)
+
+```
+
+In this example, the total and minor copy number data are shown in black and red, respectively, on top of a representation of the Giemsa stain annotation as reported in the UCSC Genome Browser. The SVs are shown as arcs following the notation established by the Pan-Cancer Analysis of Whole Genomes Project (PCAWG). The colour arbitrarily assigned to each SV type is shown in the legend on the left-hand side (see below for options to modify graphical parameters). SVs are classified into 4 categories depending on the read orientiation at the breakpoints: deletions (+-), duplications (-+), and inversions (++ and --).
+
+In our experience, a width of 6cm per chromosome, and a height of 5 cm per chromosome are adequate to display rearrangement plots and save them for publications.
+
+If we wanted to visualize a more focal region of chromosome 10, we could do so by specifying the region of interest and then applying the function:
+```{r, echo=TRUE , fig.width = (7/2.4), fig.height=(5/2.4), fig.align='center'}
+chrs=c("chr10")
+chr_selection = data.frame(
+  chr=chrs,
+  start=rep(40000000 ,length(chrs)),
+  end=rep (55000000, length(chrs))
+)
+
+plot = rearrangement_plot( sv_data,
+cn_data,
+chr_selection=chr_selection,
+scale_ticks=1000000,
+color_minor_cn="steelblue2",
+size_title = 10,
+legend_SV_types=T,
+max.cnv = 4,
+curvature_interchr_SVs = -0.08,
+title="Example of a focal region in chr10")
+
+print(plot)
+
+```
+
+We can also change the relative span of the SV and copy number plots using the argument *scaling_cn_SVs*, which defaults to 1/6. The dimensions of the Giemsa stain track can be modified using the parameters
+*lower_limit_karyotype* and *upper_limit_karyotype*.
+
+```{r, echo=TRUE , fig.width = (7/2.4), fig.height=(5/2.4), fig.align='center'}
+chrs=c("chr10")
+chr_selection = data.frame(
+  chr=chrs,
+  start=rep(40000000 ,length(chrs)),
+  end=rep (55000000, length(chrs))
+)
+
+plot = rearrangement_plot( sv_data,
+cn_data,
+chr_selection=chr_selection,
+scale_ticks=1000000,
+color_minor_cn="steelblue2",
+size_title = 10,
+legend_SV_types=T,
+scaling_cn_SVs = 1/18,
+lower_limit_karyotype = -0.4, 
+upper_limit_karyotype = -0.2,
+max.cnv = 4,
+curvature_interchr_SVs = -0.08,
+title="Example of a focal region in chr10")
+
+print(plot)
+
+```
+
+
+We can also plot several chromosomes. In this case, interchromosomal SVs involving the set of chromosomes selected are also displayed. In our experience, a width of 19cm for multichromosomal plots gives good results. Note that this is the maximum width for figures for most publishing groups. 
+
+The plot above was generated using default parameter values. However, it is possible to modify some graphical parameters. For example, we can change the colour of the minor copy number segments using the "color_minor_cn" argument. We can input a list of genes using the argument "genes" to display the genomic locations of relevant genes, such as TP53 below. Other available options are shown below and described in the package documentation.
+
+```{r  , echo=TRUE}
+chrs=c('chr1',"chr9","chr10","chr17")
+chr_selection = data.frame(
+  chr=chrs,
+  start=rep(0 ,length(chrs)),
+  end=rep (250000000, length(chrs))
+)
+```
+
+```{r, echo=TRUE, fig.width = (19/2.4), fig.height=(6.5/2.4), fig.align='center'}
+plot = rearrangement_plot( sv_data,
+cn_data,
+chr_selection=chr_selection,
+genes=c("MDM2","MYC","TP53","CDK4","EGFR"),
+title="Multichromosomal example with gene names",
+size_gene_label = 1.5,
+pos_SVtype_description=1000000,
+color_minor_cn="steelblue2",
+size_title = 7,
+size_chr_labels=7,
+legend_SV_types=T,
+curvature_interchr_SVs = -0.08,
+scale_separation_SV_type_labels=1/18, 
+max.cnv = 4, 
+lower_limit_karyotype = -0.4, 
+upper_limit_karyotype = -0.2,
+scale_ticks=20000000)
+
+print(plot)
+```
+
+We can focus on specific regions of interest across multiple chromosomes:
+
+
+```{r, echo=TRUE}
+chrs=c("chr9","chr10","chr17")
+chr_selection = data.frame(
+  chr=chrs,
+  start=c(30, 40, 0) * 1000000,
+  end=c(40, 60, 15) * 1000000
+)
+```
+
+```{r, echo=TRUE, fig.width = (19/2.4), fig.height=(5/2.4), fig.align='center'}
+plot = rearrangement_plot( sv_data,
+cn_data,
+chr_selection=chr_selection,
+genes=c("MDM2","MYC","TP53","CDK4","EGFR"),
+title="Multichromosomal example with gene names",
+size_gene_label = 1.5,
+pos_SVtype_description=1000000,
+scale_ticks=500000,
+color_minor_cn="steelblue2",
+size_title = 5,
+size_chr_labels=5,
+legend_SV_types=T,
+curvature_interchr_SVs = -0.08,
+scale_separation_SV_type_labels=1/18, 
+max.cnv = 8)
+
+print(plot)
+```
+
+
+The examples above display chromosomes with a relatively low number of SVs. However, it is possible to visualize more complex patterns, such as those detected in chromosome 12 in this sample:
+
+```{r  , echo=TRUE}
+chrs=c('chr1',"chr9","chr12")
+chr_selection = data.frame(
+  chr=chrs,
+  start=rep(0 ,length(chrs)),
+  end=rep (250000000, length(chrs))
+)
+```
+
+```{r, echo=TRUE, fig.width = (19/2.4), fig.height=(5/2.4), fig.align='center'}
+plot = rearrangement_plot( sv_data,
+cn_data,
+chr_selection=chr_selection,
+genes=c("MDM2","MDM4","MYC","CDK4","EGFR","CDKN2A","CCND2"),
+title="Multichromosomal example with gene names showing highly rearranged chromosomes",
+size_gene_label = 2,
+pos_SVtype_description=1000000,
+color_minor_cn="steelblue2",
+size_title = 5,
+size_chr_labels=5,
+legend_SV_types=T,
+curvature_interchr_SVs = -0.08,
+scale_separation_SV_type_labels=1/18, 
+max.cnv = 8, 
+scale_ticks=20000000)
+
+print(plot)
+```
+
+
+```{r  , echo=TRUE}
+chrs=c('chr1',"chr9","chr12")
+chr_selection = data.frame(
+  chr=chrs,
+  start=rep(0 ,length(chrs)),
+  end=rep (250000000, length(chrs))
+)
+```
+
+```{r, echo=TRUE, fig.width = (19/2.4), fig.height=(5/2.4), fig.align='center'}
+plot = rearrangement_plot( sv_data,
+cn_data,
+chr_selection=chr_selection,
+genes=c("MDM2","MDM4","MYC","CDK4","EGFR","CDKN2A","CCND2"),
+title="Multichromosomal example with gene names showing highly rearranged chromosomes",
+size_gene_label = 2,
+pos_SVtype_description=1000000,
+color_minor_cn="steelblue2",
+scaling_cn_SVs = 1/2,
+size_title = 9,
+size_chr_labels=9,
+legend_SV_types=T,
+curvature_interchr_SVs = -0.15,
+scale_separation_SV_type_labels=1/18, 
+max.cnv = 4, 
+scale_ticks=20000000)
+
+print(plot)
+```
+
+
+The rearrangement plots can be easily saved to a PDF file. In our experience, the following dimensions work well for publication-quality figures and written reports.
+```{r, eval=FALSE, echo=TRUE, fig.width = (19/2.4), fig.height=(5/2.4), fig.align='center'}
+pdf("example_rearrangement_plot.pdf", width=(19/2.4), height=c(5/2.4))
+p
+dev.off()
+```
+Note that we divide by 2.4 to convert from inches to centimetres.
+
+
+## License
+**GenomicRearrangementPlot is free for academic use only**. If you are not a member of a public funded academic and/or education and/or research institution you must obtain a commercial license from EMBL Enterprise Management GmbH (EMBLEM); please email EMBLEM (info@embl-em.de).
+
+## Contact
+If you have any comments or suggestions please raise an issue or contact Dr. Isidro Cortes-Ciriano: icortes@ebi.ac.uk.
+
+
