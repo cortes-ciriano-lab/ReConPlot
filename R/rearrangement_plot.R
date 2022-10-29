@@ -69,7 +69,7 @@ rearrangement_plot <- function(sv,
                         legend_SV_types=TRUE,
                         size_chr_labels=7,
                         size_title=7,
-                        size_text=6,
+                        size_text=5,
 						            lower_limit_karyotype=-0.7,
 						            upper_limit_karyotype=-0.2,
                         colour_band2= "antiquewhite1", colour_band1="grey86",
@@ -347,10 +347,10 @@ rearrangement_plot <- function(sv,
 # As per Ly's suggestion.
 # Could be made optional?
 
-  # chromosome_labeller <- function(value){
-  #   chrm_name=gsub("chr", "", value)
-  #   return(paste0("Chromosome ", chrm_name, " (Mb)"))
-  # }
+   chromosome_labeller <- function(chr, value){
+     chrm_name=gsub("chr", "", chr)
+     return(paste0("Chromosome ", chrm_name, " (Mb)"))
+   }
 
   ## plot copy number
   p = p +
@@ -360,22 +360,22 @@ rearrangement_plot <- function(sv,
     geom_segment(aes(x = start, y = Total_copy_number, xend = end,
                      yend = Total_copy_number,  group=chr), # ICC group
                  data = cnv.plot[cnv.plot$chr %in% chr_selection$chr,], colour="black",size=1) +
-    facet_grid( . ~ factor(chr, levels = chr_selection$chr),
-                scales = "free_x", space = "free_x", switch = "x") +
+    facet_grid( . ~ chr, #factor(chr, levels = chr_selection$chr), # not converting to factor to make the labeller work
+                scales = "free_x", space = "free_x", switch = "x", #) +
                 # #Add different labels?
-                # labeller = labeller(chr = chromosome_labeller)) +
+                 labeller = labeller(chr = chromosome_labeller)) +
     ggtitle(title) +
     theme(#aspect.ratio = 1,
       text=element_text(size=size_text, colour="black"), #, face ="bold"),
       axis.text.x=element_text(size=size_text, colour="black"),
       axis.title.x =element_text(size=size_text, colour="black"),
       axis.title.y =element_text(size=size_text, colour="black"),
-      plot.title =element_text(size=size_title, colour="black", margin = unit(c(-.15,0,-.15,0),'cm')), # to reduce space between title and plot:
+      plot.title =element_text(size=size_title, colour="black", margin = unit(c(-.15,0,0,0),'cm')), # to reduce space between title and plot:
       axis.text.y=element_text(size=size_text, colour="black"),
       panel.background = element_blank(),
       strip.background = element_blank(),
       strip.placement = "outside",
-      plot.margin = unit(c(.5, .5, .5, .5), "cm"),
+      plot.margin = unit(c(.25, .1, -0.1, .1), "cm"),
       panel.grid.major.x = element_blank(),
       #panel.spacing = unit(4, "lines"), ICC
       panel.spacing.x = unit(npc_now, "npc"),
@@ -497,9 +497,9 @@ rearrangement_plot <- function(sv,
           p = p +
             geom_curve(data = data.frame(cov = 1, chr = intraSV$chr1[i]),
                        x=intraSV$pos1[i], xend=intraSV$pos1[i],
-                       y=0, yend=max_y_svs_3-0.2, curvature=0,  size=0.1, colour=intraSV$colour[i])
+                       y=0, yend=max_y_svs_3-0.15, curvature=0,  size=0.1, colour=intraSV$colour[i])
           # add diagonal line on top
-  		  x_range = (chr_selection$end[which(chr_selection$chr==intraSV$chr1[i])] - chr_selection$start[which(chr_selection$chr==intraSV$chr1[i])]) * 0.05
+  		  x_range = (chr_selection$end[which(chr_selection$chr==intraSV$chr1[i])] - chr_selection$start[which(chr_selection$chr==intraSV$chr1[i])]) * 0.01
           p = p +
             geom_curve(data = data.frame(cov = 1, chr = intraSV$chr1[i]),
                        x=intraSV$pos1[i], xend=intraSV$pos1[i]+x_range, #2000000,
@@ -512,9 +512,9 @@ rearrangement_plot <- function(sv,
           p = p +
             geom_curve(data = data.frame(cov = 1, chr = intraSV$chr1[i]),
                        x=intraSV$pos2[i], xend=intraSV$pos2[i],
-                       y=0, yend=max_y_svs_3-0.2, curvature=0,  size=0.1, colour=intraSV$colour[i])
+                       y=0, yend=max_y_svs_3-0.15, curvature=0,  size=0.1, colour=intraSV$colour[i])
           # add diagonal line on top
-  		  x_range = (chr_selection$end[which(chr_selection$chr==intraSV$chr1[i])] - chr_selection$start[which(chr_selection$chr==intraSV$chr1[i])]) * 0.05
+  		  x_range = (chr_selection$end[which(chr_selection$chr==intraSV$chr1[i])] - chr_selection$start[which(chr_selection$chr==intraSV$chr1[i])]) * 0.01
           p = p +
             geom_curve(data = data.frame(cov = 1, chr = intraSV$chr1[i]),
                        x=intraSV$pos2[i], xend=intraSV$pos2[i]-x_range, #2000000,
@@ -619,7 +619,7 @@ rearrangement_plot <- function(sv,
                        x=interSV$pos2[i], xend=interSV$pos2[i],
                        y=0, yend=max_y_svs_3-0.2, curvature=0,  size=0.1, colour=interSV$colour[i])
           # add diagonal line on top
-		  x_range = (chr_selection$end[which(chr_selection$chr==interSV$chr1[i])] - chr_selection$start[which(chr_selection$chr==interSV$chr1[i])]) * 0.05
+		  x_range = (chr_selection$end[which(chr_selection$chr==interSV$chr1[i])] - chr_selection$start[which(chr_selection$chr==interSV$chr1[i])]) * 0.01
           p = p +
             geom_curve(data = data.frame(cov = 1, chr = interSV$chr2[i]),
                        x=interSV$pos2[i], xend=interSV$pos2[i]-x_range, #2000000,
@@ -634,7 +634,7 @@ rearrangement_plot <- function(sv,
                        x=interSV$pos1[i], xend=interSV$pos1[i],
                        y=0, yend=max_y_svs_3-0.2, curvature=0,  size=0.1, colour=interSV$colour[i])
           # add diagonal line on top
-		  x_range = (chr_selection$end[which(chr_selection$chr==interSV$chr1[i])] - chr_selection$start[which(chr_selection$chr==interSV$chr1[i])]) * 0.05
+		  x_range = (chr_selection$end[which(chr_selection$chr==interSV$chr1[i])] - chr_selection$start[which(chr_selection$chr==interSV$chr1[i])]) * 0.01
           p = p +
             geom_curve(data = data.frame(cov = 1, chr = interSV$chr1[i]),
                        x=interSV$pos1[i], xend=interSV$pos1[i]-x_range, #2000000,
@@ -666,7 +666,7 @@ rearrangement_plot <- function(sv,
                          x=interSV_other_chrs$pos2[i], xend=interSV_other_chrs$pos2[i],
                          y=0, yend=max_y_svs_3-0.2, curvature=0,  size=0.1, colour=interSV_other_chrs$colour[i])
             # add diagonal line on top
-  		  x_range = (chr_selection$end[which(chr_selection$chr==interSV_other_chrs$chr2[i])] - chr_selection$start[which(chr_selection$chr==interSV_other_chrs$chr2[i])]) * 0.05
+  		  x_range = (chr_selection$end[which(chr_selection$chr==interSV_other_chrs$chr2[i])] - chr_selection$start[which(chr_selection$chr==interSV_other_chrs$chr2[i])]) * 0.01
             p = p +
               geom_curve(data = data.frame(cov = 1, chr = interSV_other_chrs$chr2[i]),
                          x=interSV_other_chrs$pos2[i], xend=interSV_other_chrs$pos2[i]-x_range, #2000000,
@@ -690,7 +690,7 @@ rearrangement_plot <- function(sv,
                          x=interSV_other_chrs$pos1[i], xend=interSV_other_chrs$pos1[i],
                          y=0, yend=max_y_svs_3-0.2, curvature=0,  size=0.1, colour=interSV_other_chrs$colour[i])
             # add diagonal line on top
-  		  x_range = (chr_selection$end[which(chr_selection$chr==interSV_other_chrs$chr1[i])] - chr_selection$start[which(chr_selection$chr==interSV_other_chrs$chr1[i])]) * 0.05
+  		  x_range = (chr_selection$end[which(chr_selection$chr==interSV_other_chrs$chr1[i])] - chr_selection$start[which(chr_selection$chr==interSV_other_chrs$chr1[i])]) * 0.01
             p = p +
               geom_curve(data = data.frame(cov = 1, chr = interSV_other_chrs$chr1[i]),
                          x=interSV_other_chrs$pos1[i], xend=interSV_other_chrs$pos1[i]-x_range, #2000000,
@@ -711,8 +711,11 @@ rearrangement_plot <- function(sv,
                               max_y_svs_2-separation_labels,max_y_svs_1+separation_labels,max_y_svs_1-separation_labels),
                          colour = c(colour_t2tINV, colour_h2hINV, colour_DUP, colour_DEL)
   )
-  p = p + geom_text(data = dat_text, mapping = aes(x= pos, y = y, label = label, col = colour),
-                     size=1.5, fontface="bold")
+  p = p + geom_text(data = dat_text, mapping = aes(x= pos, y = y, label = label), # col = colour),
+                     size=1.5, fontface="bold", 
+  colour = c(colour_t2tINV, colour_h2hINV, colour_DUP, colour_DEL)
+  )
+
 
   # put copy number title further down:
   p = p + theme(axis.title.y = element_text(hjust=0.2))
