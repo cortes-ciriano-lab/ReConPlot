@@ -49,6 +49,7 @@ options(scipen=999)
 #' @param curvature_interchr_SVs Curvature for the arcs represeting interchromosomal SVs. Defaults to -0.35
 #' @param max.cnv Cap on the total copy number (for the minor we do not need as the minor will never be very high). Defaults to 10.
 #' @param npc_now
+#' @param genome_version Reference genome used. Can be either hg19, hg38 or T2T (for T2T-CHM13v1.1).
 #' @param scale_ticks Spacing of breaks in the x axis (in bp). Defaults to 20000000 (i.e., 20Mb).
 #' @examples TODO
 #' @export
@@ -61,11 +62,11 @@ rearrangement_plot <- function(sv,
                         genes=NULL,
                         chr_selection = NULL,
                         scaling_cn_SVs = 1/5,
-                        scale_separation_SV_type_labels = 1/10,
+                        scale_separation_SV_type_labels = 1/22,
                         pos_SVtype_description = 5000000,
                         window = 10000000 ,
                         xscale = 10*10^6,
-                        percentage_increase_y_axis=0.05,
+                        percentage_increase_y_axis=0.10, #05,
                         legend_SV_types=TRUE,
                         size_chr_labels=7,
                         size_title=7,
@@ -76,12 +77,12 @@ rearrangement_plot <- function(sv,
                         colour_DEL = "orange", colour_h2hINV="forestgreen", 
 						            colour_DUP="darkblue", colour_t2tINV="black",
 						            colour_TRA="darkgray",
-                        size_gene_label=2.2,
+                        size_gene_label=1.5,
                         color_minor_cn="#8491B4B2",
                         curvature_intrachr_SVs=-0.3,
-                        curvature_interchr_SVs=-0.35,
+                        curvature_interchr_SVs=-0.08, #35,
                         max.cnv=8,
-                        npc_now=.00625,
+                        npc_now=.00625 * 3,
                         scale_ticks=20000000,
 						            genome_version="hg38"
                         ){
@@ -109,6 +110,9 @@ rearrangement_plot <- function(sv,
   if(is.data.frame(cnv) == FALSE){stop("Error: the copy number data must be input in dataframe format")}
   if(is.data.frame(sv) == FALSE){stop("Error: the SV data must be input in dataframe format")}
   
+  if(sum(sv$strands %in% c("++","+-","-+","--")) > 0){
+	  stop("The SV strands need to be one of the following: ++, +-, -+ or --. Values different than these are present in the input SV data" )
+  }
   
   #----------------------------------------------------------------
   # information for the karyotype
@@ -124,6 +128,14 @@ rearrangement_plot <- function(sv,
     karyotype_data_now$chr = factor(karyotype_data_now$chr, levels=chr_selection$chr)}
   else if (genome_version == "hg19") {
     karyotype_data_now = karyotype_data_hg19[karyotype_data_hg19$chr %in% chr_selection$chr,]
+    karyotype_data_now$y = rep(1,nrow(karyotype_data_now))
+    if (nrow(karyotype_data_now)<7){
+      karyotype_data_annot=karyotype_data_now}
+    else{
+      karyotype_data_annot=karyotype_data_now[seq(3,(nrow(karyotype_data_now)-3),3),]}
+    karyotype_data_now$chr = factor(karyotype_data_now$chr, levels=chr_selection$chr)}
+  else if (genome_version == "T2T") {
+    karyotype_data_now = karyotype_data_T2T[karyotype_data_T2T$chr %in% chr_selection$chr,]
     karyotype_data_now$y = rep(1,nrow(karyotype_data_now))
     if (nrow(karyotype_data_now)<7){
       karyotype_data_annot=karyotype_data_now}
@@ -255,6 +267,7 @@ rearrangement_plot <- function(sv,
     cnv.plot <- rbind(main.cnv, cnv.plot)
     }
 
+
     #-----------------------------------
     # karyotype info now
     #-----------------------------------
@@ -338,19 +351,32 @@ rearrangement_plot <- function(sv,
                     inherit.aes = F)
   
   ## plot karyotype
+  #karyotype_data_now$chr = as.vector(karyotype_data_now$chr)
+  #karyotype_data_now$chr = factor(karyotype_data_now$chr, levels=chr_selection$chr)
   p = p + geom_rect(data=karyotype_data_now,
                     mapping = aes(xmin = start, xmax = end, ymin = lower_limit_karyotype, ymax = upper_limit_karyotype, group=chr), # can change the default values for karyotype
                     fill = karyotype_data_now$color, color="black",size=.1)
 
-
-#JEVI: This function adds a better title to the chromosome
-# As per Ly's suggestion.
-# Could be made optional?
-
    chromosome_labeller <- function(chr, value){
      chrm_name=gsub("chr", "", chr)
      return(paste0("Chromosome ", chrm_name, " (Mb)"))
+     #vec = paste0("Chromosome ", chrm_name, " (Mb)")
+	 #names(vec) = chr
+     #return(vec) #paste0("Chromosome ", chrm_name, " (Mb)"))
    }
+
+
+ #named_v =  paste0("sdf",chr_selection$chr) 
+ # names(named_v) = chr_selection$chr
+  #chromosome_labeller = as_labeller(named_v)
+
+	#cnv.plot$chr = as.vector(cnv.plot$chr)
+	#cnv.plot$chr_f = factor(as.vector(cnv.plot$chr), levels=chr_selection$chr)
+
+
+  # define the breaks on the y axis (cn) to show:
+  breaks_y = c(0,1,2)
+  breaks_y = c(breaks_y, unique(floor(quantile(2:max_y, probs = seq(.1, .9, by = .1)))) )
 
   ## plot copy number
   p = p +
@@ -360,10 +386,12 @@ rearrangement_plot <- function(sv,
     geom_segment(aes(x = start, y = Total_copy_number, xend = end,
                      yend = Total_copy_number,  group=chr), # ICC group
                  data = cnv.plot[cnv.plot$chr %in% chr_selection$chr,], colour="black",size=1) +
-    facet_grid( . ~ chr, #factor(chr, levels = chr_selection$chr), # not converting to factor to make the labeller work
+    facet_grid( . ~ factor(chr, levels = chr_selection$chr), # not converting to factor to make the labeller work
                 scales = "free_x", space = "free_x", switch = "x", #) +
                 # #Add different labels?
-                 labeller = labeller(chr = chromosome_labeller)) +
+                 labeller = as_labeller(chromosome_labeller)) + #(chr=chr_selection$chr) ) +
+                 #labeller = labeller(chr = chromosome_labeller )) +
+                 #labeller = labeller(chr = chromosome_labeller(chr=chr_selection$chr) )) +
     ggtitle(title) +
     theme(#aspect.ratio = 1,
       text=element_text(size=size_text, colour="black"), #, face ="bold"),
@@ -388,7 +416,7 @@ rearrangement_plot <- function(sv,
     labs(x = "", y = "Copy number")  +
     coord_cartesian(clip = "off", expand=0) + # ICC
     #ylim(c(0,max_y),expand) +
-    scale_y_continuous(limits = c(lower_limit_karyotype - 0.05,max_y_svs_3+0.5), expand = .2, breaks=seq(0,max_y,2)) +
+    scale_y_continuous(limits = c(lower_limit_karyotype - 0.05,max_y_svs_3+0.5), expand = .2, breaks=breaks_y) + #seq(0,max_y,2)) +
     scale_x_continuous(labels=formatter1000,
                        breaks=scaler(scale_ticks))
 
