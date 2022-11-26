@@ -439,6 +439,9 @@ rearrangement_plot <- function(sv,
       else if (genome_version == "hg19") {
         gene_coord_now = gene_coord_hg19[gene_coord_hg19$gene==gene,]
       }
+      else if (genome_version == "T2T") {
+        gene_coord_now = gene_coord_T2T[gene_coord_T2T$gene==gene,]
+      }
       else {stop("Genome version not recognized")}
       #Some genes are not in the annotation list -> skip
       if (nrow(gene_coord_now) == 0) {next}
