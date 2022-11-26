@@ -179,7 +179,7 @@ rearrangement_plot <- function(sv,
         } else {c = curvature_intrachr_SVs}
         # c = curvature_intrachr_SVs
       }
-      else {c = curvature_interchr_SVs}
+      else {c = curvature_intrachr_SVs}
       c
     })
   }
