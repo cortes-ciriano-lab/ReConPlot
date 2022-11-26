@@ -51,7 +51,7 @@ options(scipen=999)
 #' @param npc_now
 #' @param genome_version Reference genome used. Can be either hg19, hg38 or T2T (for T2T-CHM13v1.1).
 #' @param scale_ticks Spacing of breaks in the x axis (in bp). Defaults to 20000000 (i.e., 20Mb).
-#' @examples TODO
+#' @examples Please the tutorial of the package.
 #' @export
 
 ####' @param xscale Scale for the x axis. Defaults to 10*10^6 to put the x axis in Mbp.
@@ -113,6 +113,10 @@ rearrangement_plot <- function(sv,
   if(sum(sv$strands %in% c("++","+-","-+","--")) > 0){
 	  stop("The SV strands need to be one of the following: ++, +-, -+ or --. Values different than these are present in the input SV data" )
   }
+
+  idx = which(sv$pos1 == sv$pos2)
+  if(lengh(idx)>0){sv$pos2[idx] = sv$pos2[idx]+1}
+
   
   #----------------------------------------------------------------
   # information for the karyotype
