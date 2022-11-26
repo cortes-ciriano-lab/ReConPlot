@@ -4,6 +4,9 @@ R package to visualize complex genomic rearrangements by plotting copy number pr
 # Installation
 R CMD INSTALL GenomicRearrangementPlot
 
+# How to use and examples
+Please see the detailed tutorial and documentation of the package for examples and best practices for using GenomicRearrangementPlot to generate publication-quality figures.
+
 # Contact
 If you have any comments or suggestions please raise an issue or contact us:
 Jose Espejo: jespejo@ebi.ac.uk
