@@ -49,8 +49,9 @@ options(scipen=999)
 #' @param curvature_interchr_SVs Curvature for the arcs represeting interchromosomal SVs. Defaults to -0.35
 #' @param max.cnv Cap on the total copy number (for the minor we do not need as the minor will never be very high). Defaults to 10.
 #' @param npc_now
+#' @param genome_version Reference genome used. Can be either hg19, hg38 or T2T (for T2T-CHM13v1.1).
 #' @param scale_ticks Spacing of breaks in the x axis (in bp). Defaults to 20000000 (i.e., 20Mb).
-#' @examples TODO
+#' @examples Please the tutorial of the package.
 #' @export
 
 ####' @param xscale Scale for the x axis. Defaults to 10*10^6 to put the x axis in Mbp.
@@ -61,27 +62,27 @@ rearrangement_plot <- function(sv,
                         genes=NULL,
                         chr_selection = NULL,
                         scaling_cn_SVs = 1/5,
-                        scale_separation_SV_type_labels = 1/10,
+                        scale_separation_SV_type_labels = 1/22,
                         pos_SVtype_description = 5000000,
                         window = 10000000 ,
                         xscale = 10*10^6,
-                        percentage_increase_y_axis=0.05,
+                        percentage_increase_y_axis=0.10, #05,
                         legend_SV_types=TRUE,
                         size_chr_labels=7,
                         size_title=7,
-                        size_text=6,
+                        size_text=5,
 						            lower_limit_karyotype=-0.7,
 						            upper_limit_karyotype=-0.2,
                         colour_band2= "antiquewhite1", colour_band1="grey86",
                         colour_DEL = "orange", colour_h2hINV="forestgreen", 
 						            colour_DUP="darkblue", colour_t2tINV="black",
 						            colour_TRA="darkgray",
-                        size_gene_label=2.2,
+                        size_gene_label=1.5,
                         color_minor_cn="#8491B4B2",
                         curvature_intrachr_SVs=-0.3,
-                        curvature_interchr_SVs=-0.35,
+                        curvature_interchr_SVs=-0.08, #35,
                         max.cnv=8,
-                        npc_now=.00625,
+                        npc_now=.00625 * 3,
                         scale_ticks=20000000,
 						            genome_version="hg38"
                         ){
@@ -109,6 +110,13 @@ rearrangement_plot <- function(sv,
   if(is.data.frame(cnv) == FALSE){stop("Error: the copy number data must be input in dataframe format")}
   if(is.data.frame(sv) == FALSE){stop("Error: the SV data must be input in dataframe format")}
   
+  if(sum(sv$strands %in% c("++","+-","-+","--")) > 0){
+	  stop("The SV strands need to be one of the following: ++, +-, -+ or --. Values different than these are present in the input SV data" )
+  }
+
+  idx = which(sv$pos1 == sv$pos2)
+  if(lengh(idx)>0){sv$pos2[idx] = sv$pos2[idx]+1}
+
   
   #----------------------------------------------------------------
   # information for the karyotype
@@ -124,6 +132,14 @@ rearrangement_plot <- function(sv,
     karyotype_data_now$chr = factor(karyotype_data_now$chr, levels=chr_selection$chr)}
   else if (genome_version == "hg19") {
     karyotype_data_now = karyotype_data_hg19[karyotype_data_hg19$chr %in% chr_selection$chr,]
+    karyotype_data_now$y = rep(1,nrow(karyotype_data_now))
+    if (nrow(karyotype_data_now)<7){
+      karyotype_data_annot=karyotype_data_now}
+    else{
+      karyotype_data_annot=karyotype_data_now[seq(3,(nrow(karyotype_data_now)-3),3),]}
+    karyotype_data_now$chr = factor(karyotype_data_now$chr, levels=chr_selection$chr)}
+  else if (genome_version == "T2T") {
+    karyotype_data_now = karyotype_data_T2T[karyotype_data_T2T$chr %in% chr_selection$chr,]
     karyotype_data_now$y = rep(1,nrow(karyotype_data_now))
     if (nrow(karyotype_data_now)<7){
       karyotype_data_annot=karyotype_data_now}
@@ -167,7 +183,7 @@ rearrangement_plot <- function(sv,
         } else {c = curvature_intrachr_SVs}
         # c = curvature_intrachr_SVs
       }
-      else {c = curvature_interchr_SVs}
+      else {c = curvature_intrachr_SVs}
       c
     })
   }
@@ -255,6 +271,7 @@ rearrangement_plot <- function(sv,
     cnv.plot <- rbind(main.cnv, cnv.plot)
     }
 
+
     #-----------------------------------
     # karyotype info now
     #-----------------------------------
@@ -338,19 +355,32 @@ rearrangement_plot <- function(sv,
                     inherit.aes = F)
   
   ## plot karyotype
+  #karyotype_data_now$chr = as.vector(karyotype_data_now$chr)
+  #karyotype_data_now$chr = factor(karyotype_data_now$chr, levels=chr_selection$chr)
   p = p + geom_rect(data=karyotype_data_now,
                     mapping = aes(xmin = start, xmax = end, ymin = lower_limit_karyotype, ymax = upper_limit_karyotype, group=chr), # can change the default values for karyotype
                     fill = karyotype_data_now$color, color="black",size=.1)
 
+   chromosome_labeller <- function(chr, value){
+     chrm_name=gsub("chr", "", chr)
+     return(paste0("Chromosome ", chrm_name, " (Mb)"))
+     #vec = paste0("Chromosome ", chrm_name, " (Mb)")
+	 #names(vec) = chr
+     #return(vec) #paste0("Chromosome ", chrm_name, " (Mb)"))
+   }
 
-#JEVI: This function adds a better title to the chromosome
-# As per Ly's suggestion.
-# Could be made optional?
 
-  # chromosome_labeller <- function(value){
-  #   chrm_name=gsub("chr", "", value)
-  #   return(paste0("Chromosome ", chrm_name, " (Mb)"))
-  # }
+ #named_v =  paste0("sdf",chr_selection$chr) 
+ # names(named_v) = chr_selection$chr
+  #chromosome_labeller = as_labeller(named_v)
+
+	#cnv.plot$chr = as.vector(cnv.plot$chr)
+	#cnv.plot$chr_f = factor(as.vector(cnv.plot$chr), levels=chr_selection$chr)
+
+
+  # define the breaks on the y axis (cn) to show:
+  breaks_y = c(0,1,2)
+  breaks_y = c(breaks_y, unique(floor(quantile(2:max_y, probs = seq(.1, .9, by = .1)))) )
 
   ## plot copy number
   p = p +
@@ -360,22 +390,24 @@ rearrangement_plot <- function(sv,
     geom_segment(aes(x = start, y = Total_copy_number, xend = end,
                      yend = Total_copy_number,  group=chr), # ICC group
                  data = cnv.plot[cnv.plot$chr %in% chr_selection$chr,], colour="black",size=1) +
-    facet_grid( . ~ factor(chr, levels = chr_selection$chr),
-                scales = "free_x", space = "free_x", switch = "x") +
+    facet_grid( . ~ factor(chr, levels = chr_selection$chr), # not converting to factor to make the labeller work
+                scales = "free_x", space = "free_x", switch = "x", #) +
                 # #Add different labels?
-                # labeller = labeller(chr = chromosome_labeller)) +
+                 labeller = as_labeller(chromosome_labeller)) + #(chr=chr_selection$chr) ) +
+                 #labeller = labeller(chr = chromosome_labeller )) +
+                 #labeller = labeller(chr = chromosome_labeller(chr=chr_selection$chr) )) +
     ggtitle(title) +
     theme(#aspect.ratio = 1,
       text=element_text(size=size_text, colour="black"), #, face ="bold"),
       axis.text.x=element_text(size=size_text, colour="black"),
       axis.title.x =element_text(size=size_text, colour="black"),
       axis.title.y =element_text(size=size_text, colour="black"),
-      plot.title =element_text(size=size_title, colour="black", margin = unit(c(-.15,0,-.15,0),'cm')), # to reduce space between title and plot:
+      plot.title =element_text(size=size_title, colour="black", margin = unit(c(-.15,0,0,0),'cm')), # to reduce space between title and plot:
       axis.text.y=element_text(size=size_text, colour="black"),
       panel.background = element_blank(),
       strip.background = element_blank(),
       strip.placement = "outside",
-      plot.margin = unit(c(.5, .5, .5, .5), "cm"),
+      plot.margin = unit(c(.25, .1, -0.1, .1), "cm"),
       panel.grid.major.x = element_blank(),
       #panel.spacing = unit(4, "lines"), ICC
       panel.spacing.x = unit(npc_now, "npc"),
@@ -388,7 +420,7 @@ rearrangement_plot <- function(sv,
     labs(x = "", y = "Copy number")  +
     coord_cartesian(clip = "off", expand=0) + # ICC
     #ylim(c(0,max_y),expand) +
-    scale_y_continuous(limits = c(lower_limit_karyotype - 0.05,max_y_svs_3+0.5), expand = .2, breaks=seq(0,max_y,2)) +
+    scale_y_continuous(limits = c(lower_limit_karyotype - 0.05,max_y_svs_3+0.5), expand = .2, breaks=breaks_y) + #seq(0,max_y,2)) +
     scale_x_continuous(labels=formatter1000,
                        breaks=scaler(scale_ticks))
 
@@ -406,6 +438,9 @@ rearrangement_plot <- function(sv,
       }
       else if (genome_version == "hg19") {
         gene_coord_now = gene_coord_hg19[gene_coord_hg19$gene==gene,]
+      }
+      else if (genome_version == "T2T") {
+        gene_coord_now = gene_coord_T2T[gene_coord_T2T$gene==gene,]
       }
       else {stop("Genome version not recognized")}
       #Some genes are not in the annotation list -> skip
@@ -497,9 +532,9 @@ rearrangement_plot <- function(sv,
           p = p +
             geom_curve(data = data.frame(cov = 1, chr = intraSV$chr1[i]),
                        x=intraSV$pos1[i], xend=intraSV$pos1[i],
-                       y=0, yend=max_y_svs_3-0.2, curvature=0,  size=0.1, colour=intraSV$colour[i])
+                       y=0, yend=max_y_svs_3-0.15, curvature=0,  size=0.1, colour=intraSV$colour[i])
           # add diagonal line on top
-  		  x_range = (chr_selection$end[which(chr_selection$chr==intraSV$chr1[i])] - chr_selection$start[which(chr_selection$chr==intraSV$chr1[i])]) * 0.05
+  		  x_range = (chr_selection$end[which(chr_selection$chr==intraSV$chr1[i])] - chr_selection$start[which(chr_selection$chr==intraSV$chr1[i])]) * 0.01
           p = p +
             geom_curve(data = data.frame(cov = 1, chr = intraSV$chr1[i]),
                        x=intraSV$pos1[i], xend=intraSV$pos1[i]+x_range, #2000000,
@@ -512,9 +547,9 @@ rearrangement_plot <- function(sv,
           p = p +
             geom_curve(data = data.frame(cov = 1, chr = intraSV$chr1[i]),
                        x=intraSV$pos2[i], xend=intraSV$pos2[i],
-                       y=0, yend=max_y_svs_3-0.2, curvature=0,  size=0.1, colour=intraSV$colour[i])
+                       y=0, yend=max_y_svs_3-0.15, curvature=0,  size=0.1, colour=intraSV$colour[i])
           # add diagonal line on top
-  		  x_range = (chr_selection$end[which(chr_selection$chr==intraSV$chr1[i])] - chr_selection$start[which(chr_selection$chr==intraSV$chr1[i])]) * 0.05
+  		  x_range = (chr_selection$end[which(chr_selection$chr==intraSV$chr1[i])] - chr_selection$start[which(chr_selection$chr==intraSV$chr1[i])]) * 0.01
           p = p +
             geom_curve(data = data.frame(cov = 1, chr = intraSV$chr1[i]),
                        x=intraSV$pos2[i], xend=intraSV$pos2[i]-x_range, #2000000,
@@ -619,7 +654,7 @@ rearrangement_plot <- function(sv,
                        x=interSV$pos2[i], xend=interSV$pos2[i],
                        y=0, yend=max_y_svs_3-0.2, curvature=0,  size=0.1, colour=interSV$colour[i])
           # add diagonal line on top
-		  x_range = (chr_selection$end[which(chr_selection$chr==interSV$chr1[i])] - chr_selection$start[which(chr_selection$chr==interSV$chr1[i])]) * 0.05
+		  x_range = (chr_selection$end[which(chr_selection$chr==interSV$chr1[i])] - chr_selection$start[which(chr_selection$chr==interSV$chr1[i])]) * 0.01
           p = p +
             geom_curve(data = data.frame(cov = 1, chr = interSV$chr2[i]),
                        x=interSV$pos2[i], xend=interSV$pos2[i]-x_range, #2000000,
@@ -634,7 +669,7 @@ rearrangement_plot <- function(sv,
                        x=interSV$pos1[i], xend=interSV$pos1[i],
                        y=0, yend=max_y_svs_3-0.2, curvature=0,  size=0.1, colour=interSV$colour[i])
           # add diagonal line on top
-		  x_range = (chr_selection$end[which(chr_selection$chr==interSV$chr1[i])] - chr_selection$start[which(chr_selection$chr==interSV$chr1[i])]) * 0.05
+		  x_range = (chr_selection$end[which(chr_selection$chr==interSV$chr1[i])] - chr_selection$start[which(chr_selection$chr==interSV$chr1[i])]) * 0.01
           p = p +
             geom_curve(data = data.frame(cov = 1, chr = interSV$chr1[i]),
                        x=interSV$pos1[i], xend=interSV$pos1[i]-x_range, #2000000,
@@ -666,7 +701,7 @@ rearrangement_plot <- function(sv,
                          x=interSV_other_chrs$pos2[i], xend=interSV_other_chrs$pos2[i],
                          y=0, yend=max_y_svs_3-0.2, curvature=0,  size=0.1, colour=interSV_other_chrs$colour[i])
             # add diagonal line on top
-  		  x_range = (chr_selection$end[which(chr_selection$chr==interSV_other_chrs$chr2[i])] - chr_selection$start[which(chr_selection$chr==interSV_other_chrs$chr2[i])]) * 0.05
+  		  x_range = (chr_selection$end[which(chr_selection$chr==interSV_other_chrs$chr2[i])] - chr_selection$start[which(chr_selection$chr==interSV_other_chrs$chr2[i])]) * 0.01
             p = p +
               geom_curve(data = data.frame(cov = 1, chr = interSV_other_chrs$chr2[i]),
                          x=interSV_other_chrs$pos2[i], xend=interSV_other_chrs$pos2[i]-x_range, #2000000,
@@ -690,7 +725,7 @@ rearrangement_plot <- function(sv,
                          x=interSV_other_chrs$pos1[i], xend=interSV_other_chrs$pos1[i],
                          y=0, yend=max_y_svs_3-0.2, curvature=0,  size=0.1, colour=interSV_other_chrs$colour[i])
             # add diagonal line on top
-  		  x_range = (chr_selection$end[which(chr_selection$chr==interSV_other_chrs$chr1[i])] - chr_selection$start[which(chr_selection$chr==interSV_other_chrs$chr1[i])]) * 0.05
+  		  x_range = (chr_selection$end[which(chr_selection$chr==interSV_other_chrs$chr1[i])] - chr_selection$start[which(chr_selection$chr==interSV_other_chrs$chr1[i])]) * 0.01
             p = p +
               geom_curve(data = data.frame(cov = 1, chr = interSV_other_chrs$chr1[i]),
                          x=interSV_other_chrs$pos1[i], xend=interSV_other_chrs$pos1[i]-x_range, #2000000,
@@ -711,8 +746,11 @@ rearrangement_plot <- function(sv,
                               max_y_svs_2-separation_labels,max_y_svs_1+separation_labels,max_y_svs_1-separation_labels),
                          colour = c(colour_t2tINV, colour_h2hINV, colour_DUP, colour_DEL)
   )
-  p = p + geom_text(data = dat_text, mapping = aes(x= pos, y = y, label = label, col = colour),
-                     size=1.5, fontface="bold")
+  p = p + geom_text(data = dat_text, mapping = aes(x= pos, y = y, label = label), # col = colour),
+                     size=1.5, fontface="bold", 
+  colour = c(colour_t2tINV, colour_h2hINV, colour_DUP, colour_DEL)
+  )
+
 
   # put copy number title further down:
   p = p + theme(axis.title.y = element_text(hjust=0.2))
