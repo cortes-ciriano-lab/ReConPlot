@@ -110,12 +110,12 @@ rearrangement_plot <- function(sv,
   if(is.data.frame(cnv) == FALSE){stop("Error: the copy number data must be input in dataframe format")}
   if(is.data.frame(sv) == FALSE){stop("Error: the SV data must be input in dataframe format")}
   
-  if(sum(sv$strands %in% c("++","+-","-+","--")) > 0){
-	  stop("The SV strands need to be one of the following: ++, +-, -+ or --. Values different than these are present in the input SV data" )
-  }
+#   if(sum(sv$strands %in% c("++","+-","-+","--")) > 0){
+# 	  stop("The SV strands need to be one of the following: ++, +-, -+ or --. Values different than these are present in the input SV data" )
+#   }
 
   idx = which(sv$pos1 == sv$pos2)
-  if(lengh(idx)>0){sv$pos2[idx] = sv$pos2[idx]+1}
+  if(length(idx)>0){sv$pos2[idx] = sv$pos2[idx]+1}
 
   
   #----------------------------------------------------------------
@@ -379,9 +379,12 @@ rearrangement_plot <- function(sv,
 
 
   # define the breaks on the y axis (cn) to show:
-  breaks_y = c(0,1,2)
-  breaks_y = c(breaks_y, unique(floor(quantile(2:max_y, probs = seq(.1, .9, by = .1)))) )
-
+   if (max.cnv < 8) {break.step = 1}
+   else if (max.cnv >= 8 & max.cnv < 25) {break.step = 2}
+   else (break.step = 5)
+   breaks_y = seq(0,max.cnv, break.step)
+  # breaks_y = c(0,1,2)
+  # breaks_y = c(breaks_y, unique(floor(quantile(2:max_y, probs = seq(.1, .9, by = .1)))))
   ## plot copy number
   p = p +
     geom_segment(aes(x = start, y = Tumour_minor, xend = end,
@@ -420,73 +423,16 @@ rearrangement_plot <- function(sv,
     labs(x = "", y = "Copy number")  +
     coord_cartesian(clip = "off", expand=0) + # ICC
     #ylim(c(0,max_y),expand) +
-    scale_y_continuous(limits = c(lower_limit_karyotype - 0.05,max_y_svs_3+0.5), expand = .2, breaks=breaks_y) + #seq(0,max_y,2)) +
+    scale_y_continuous(limits = c(lower_limit_karyotype - 0.05,max_y_svs_3+0.5),  breaks=breaks_y, expand = 1,
+                       labels=c(breaks_y[1:length(breaks_y)-1], paste0(">=",breaks_y[length(breaks_y)]))) + #seq(0,max_y,2)) +
     scale_x_continuous(labels=formatter1000,
                        breaks=scaler(scale_ticks))
-
+  
   # add lines where the SVs go
   p = p + geom_abline(slope = 0, intercept=max_y_svs_1, colour="black", size=.25)
   p = p + geom_abline(slope = 0, intercept=max_y_svs_2, colour="black", size=.25)
 
-  #----------------------------------------------------------------------------
-  # highlight genes
-  #----------------------------------------------------------------------------
-  if(!is.null(genes)){
-    for(gene in genes){
-      if (genome_version == "hg38") {
-        gene_coord_now = gene_coord[gene_coord$gene==gene,]
-      }
-      else if (genome_version == "hg19") {
-        gene_coord_now = gene_coord_hg19[gene_coord_hg19$gene==gene,]
-      }
-      else if (genome_version == "T2T") {
-        gene_coord_now = gene_coord_T2T[gene_coord_T2T$gene==gene,]
-      }
-      else {stop("Genome version not recognized")}
-      #Some genes are not in the annotation list -> skip
-      if (nrow(gene_coord_now) == 0) {next}
-	  # are the genes to be plotted in the selected chromosomes?
-      # print(gene_coord_now)
-      # print(chr_selection)
-	  if (gene_coord_now$chr %in% chr_selection$chr){
-      if(nrow(gene_coord_now)>0 & gene_coord_now$chr %in% chr_selection$chr &
-         gene_coord_now$start > chr_selection$start[which(chr_selection$chr==gene_coord_now$chr)] & # if the gene is outside plotting range discard
-         gene_coord_now$start < chr_selection$end[which(chr_selection$chr==gene_coord_now$chr)]
-      ){
-        
-        # add vertical line
-        p =  p +
-        #Substitute line for geom rect,
-          #Keep line for small genes in large plotting regions geom_rect sometimes fails
-          geom_curve(data = data.frame(cov = 1, chr = gene_coord_now$chr),
-          x=gene_coord_now$start, xend=gene_coord_now$start,
-          y=0, #max_y_svs_2 + (max_y_svs_3-max_y_svs_2)/2,
-          yend=max_y_svs_3-1.5, curvature=0,  size=0.25, colour="green",alpha=.75) +
-          geom_rect(data = data.frame(cov = 1, chr = gene_coord_now$chr),
-                     xmin=gene_coord_now$start, xmax=gene_coord_now$end,
-                     ymin=0, #max_y_svs_2 + (max_y_svs_3-max_y_svs_2)/2,
-                     ymax=max_y_svs_3-1.5,
-                     size=0.25, fill = "green", alpha=.75)
-        
-
-        # # add text annotation
-        # dat_text <- data.frame(label = gene,
-        #                        chr= factor(gene_coord_now$chr,levels = chr_selection$chr),
-        #                        pos=gene_coord_now$start, y= max_y_svs_3+ 0.5
-        # )
-        dat_text <- data.frame(label = gene,
-                               chr= factor(gene_coord_now$chr,levels = chr_selection$chr),
-                               pos=(gene_coord_now$start+gene_coord_now$end)/2, y= max_y_svs_3-.75
-        )
-        p = p + geom_text(data = dat_text, mapping = aes(x= pos, y = y, label = label), 
-                                size=size_gene_label ,fontface="italic") 
-        # add point
-        p = p + geom_point(data= dat_text, mapping = aes(x= pos, y = max_y_svs_3-1.5),
-        size=.5 ,colour="darkblue")
-      }
-    }
-	}
-  }
+  
 
   #----------------------------------------------------------------------------
   # add intrachr
@@ -731,6 +677,66 @@ rearrangement_plot <- function(sv,
                          x=interSV_other_chrs$pos1[i], xend=interSV_other_chrs$pos1[i]-x_range, #2000000,
                          y=max_y_svs_3-0.2, yend=max_y_svs_3 , angle=45, curvature=0,  size=0.1, colour=interSV_other_chrs$colour[i])
           }
+        }
+      }
+    }
+  }
+  
+  #----------------------------------------------------------------------------
+  # highlight genes
+  #----------------------------------------------------------------------------
+  if(!is.null(genes)){
+    for(gene in genes){
+      if (genome_version == "hg38") {
+        gene_coord_now = gene_coord[gene_coord$gene==gene,]
+      }
+      else if (genome_version == "hg19") {
+        gene_coord_now = gene_coord_hg19[gene_coord_hg19$gene==gene,]
+      }
+      else if (genome_version == "T2T") {
+        gene_coord_now = gene_coord_T2T[gene_coord_T2T$gene==gene,]
+      }
+      else {stop("Genome version not recognized")}
+      #Some genes are not in the annotation list -> skip
+      if (nrow(gene_coord_now) == 0) {next}
+      # are the genes to be plotted in the selected chromosomes?
+      # print(gene_coord_now)
+      # print(chr_selection)
+      if (gene_coord_now$chr %in% chr_selection$chr){
+        if(nrow(gene_coord_now)>0 & gene_coord_now$chr %in% chr_selection$chr &
+           gene_coord_now$start > chr_selection$start[which(chr_selection$chr==gene_coord_now$chr)] & # if the gene is outside plotting range discard
+           gene_coord_now$start < chr_selection$end[which(chr_selection$chr==gene_coord_now$chr)]
+        ){
+          
+          # add vertical line
+          p =  p +
+            #Substitute line for geom rect,
+            #Keep line for small genes in large plotting regions geom_rect sometimes fails
+            geom_curve(data = data.frame(cov = 1, chr = gene_coord_now$chr),
+                       x=gene_coord_now$start, xend=gene_coord_now$start,
+                       y=0, #max_y_svs_2 + (max_y_svs_3-max_y_svs_2)/2,
+                       yend=max_y_svs_3-1.5, curvature=0,  size=0.25, colour="green",alpha=.75) +
+            geom_rect(data = data.frame(cov = 1, chr = gene_coord_now$chr),
+                      xmin=gene_coord_now$start, xmax=gene_coord_now$end,
+                      ymin=0, #max_y_svs_2 + (max_y_svs_3-max_y_svs_2)/2,
+                      ymax=max_y_svs_3-1.5,
+                      size=0.25, fill = "green", alpha=.6)
+          
+          
+          # # add text annotation
+          # dat_text <- data.frame(label = gene,
+          #                        chr= factor(gene_coord_now$chr,levels = chr_selection$chr),
+          #                        pos=gene_coord_now$start, y= max_y_svs_3+ 0.5
+          # )
+          dat_text <- data.frame(label = gene,
+                                 chr= factor(gene_coord_now$chr,levels = chr_selection$chr),
+                                 pos=(gene_coord_now$start+gene_coord_now$end)/2, y= max_y_svs_3-.75
+          )
+          p = p + geom_text(data = dat_text, mapping = aes(x= pos, y = y, label = label), 
+                            size=size_gene_label ,fontface="italic") 
+          # add point
+          p = p + geom_point(data= dat_text, mapping = aes(x= pos, y = max_y_svs_3-1.5),
+                             size=.5 ,colour="darkblue")
         }
       }
     }
