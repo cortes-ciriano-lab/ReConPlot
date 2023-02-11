@@ -178,7 +178,7 @@ ReConPlot <- function(sv,
       #      I commented it out and c = curvature_intrachr_SVs always
         
         if (abs(as.integer(x["pos2"])-as.integer(x["pos1"])) <= 10000000){
-          c = 4*curvature_intrachr_SVs
+          c = 2*curvature_intrachr_SVs
         } else {c = curvature_intrachr_SVs}
         # c = curvature_intrachr_SVs
       }
