@@ -100,7 +100,7 @@ legend_SV_types=T,
 pos_SVtype_description=1000000,
 scale_separation_SV_type_labels=1/18,
 max.cnv = 4,
-curvature_interchr_SVs = -0.06,
+curvature_intrachr_SVs = -0.12,
 title="Example of a focal region in chr10")
 
 print(plot)
@@ -130,8 +130,8 @@ lower_limit_karyotype = -0.4,
 upper_limit_karyotype = -0.2,
 pos_SVtype_description=1000000,
 scale_separation_SV_type_labels=1/23,
+curvature_intrachr_SVs = -0.1,
 max.cnv = 4,
-curvature_interchr_SVs = -0.06,
 title="Example of a focal region in chr10")
 
 print(plot)
@@ -165,7 +165,6 @@ size_title = 7,
 size_chr_labels=5,
 legend_SV_types=T,
 scale_separation_SV_type_labels=1/23,
-curvature_interchr_SVs = -0.06,
 max.cnv = 4, 
 lower_limit_karyotype = -0.4, 
 upper_limit_karyotype = -0.2,
@@ -230,7 +229,6 @@ color_minor_cn="steelblue2",
 size_title = 7,
 size_chr_labels=7,
 legend_SV_types=T,
-curvature_interchr_SVs = -0.08,
 scale_separation_SV_type_labels=1/23, 
 max.cnv = 10, 
 scale_ticks=20000000)
@@ -261,7 +259,6 @@ scaling_cn_SVs = 1/2,
 size_title = 7,
 size_chr_labels=9,
 legend_SV_types=T,
-curvature_interchr_SVs = -0.15,
 scale_separation_SV_type_labels=1/18, 
 max.cnv = 4, 
 scale_ticks=20000000)
