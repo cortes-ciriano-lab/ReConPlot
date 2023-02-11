@@ -1,11 +1,11 @@
 ---
 title: "Visualizing genomic rearrangements using the R package *ReConPlot*"
 author: "José Espejo Valle-Inclán and Isidro Cortes-Ciriano*"
-date: "07/05/2022"
+date: "11/02/2023"
 contact: icortes@ebi.ac.uk
 output:
-  pdf_document: default
   html_document: default
+  pdf_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -21,7 +21,7 @@ Visualization of SVs and copy number aberrations is often required to identify t
 Here, we present the R package *ReConPlot*, which provides functionalities for the visualization of copy number profiles and SVs. The package relies on public packages, including the popular ggplot2, thus allowing further customization of the plots.
 
 To visualize genomic rearrangement profiles, *ReConPlot* requires structural variation and copy number data in the commonly used bed format. For SVs, *ReConPlot* uses breakend notation to facilitate compatibility with any SV caller conforming with best practices for reporting SVs in vcf format.
-While the primary focus of *ReConPlot* is the visualization of complex somatic copy number and SVs in the context of cancer, the functionalities provided can be used to visualize genomics data from non-cancer samples, such as somatic aberrations detected in normal tissues, single-cell whole-genome data or others. However, note that at present *ReConPlot* only supports the build of the human reference genome GRCh38. 
+While the primary focus of *ReConPlot* is the visualization of complex somatic copy number and SVs in the context of cancer, the functionalities provided can be used to visualize genomics data from non-cancer samples, such as somatic aberrations detected in normal tissues, single-cell whole-genome data or others. Currently, *ReConPlot*  supports the following builds of the human reference genome: GRCh37, GRCh38 and T2T-CHM13.  
 
 ## Examples
 In the next section we provide examples of the functionalities of *ReConPlot* and provide best practices to generate high-quality plots.
@@ -64,12 +64,12 @@ chr_selection = data.frame(
 
 Once the regions of interest is defined, we can generate the rearrangement plot. For example, we can plot the genomic rearrangement profile for chromosome 10:
 
-```{r, echo=TRUE, fig.width = (7.5/2.4), fig.height=(5.5/2.4), fig.align='center'}
+```{r, echo=TRUE, fig.width = (9.5/2.54), fig.height=(5.5/2.54), fig.align='center'}
 plot = ReConPlot( sv_data,
 cn_data,
 chr_selection=chr_selection,
 legend_SV_types=T,
-pos_SVtype_description=1000000,
+pos_SVtype_description=115000000,
 scale_separation_SV_type_labels=1/23,
 title="Example")
 
@@ -82,7 +82,7 @@ In this example, the total and minor copy number data are shown in black and red
 In our experience, a width of 6cm per chromosome, and a height of 5 cm per chromosome are adequate to display rearrangement plots and save them for publications.
 
 If we wanted to visualize a more focal region of chromosome 10, we could do so by specifying the region of interest and then applying the function:
-```{r, echo=TRUE , fig.width = (12/2.4), fig.height=(5.5/2.4), fig.align='center'}
+```{r, echo=TRUE , fig.width = (12/2.54), fig.height=(5.5/2.54), fig.align='center'}
 chrs=c("chr10")
 chr_selection = data.frame(
   chr=chrs,
@@ -110,7 +110,7 @@ print(plot)
 We can also change the relative span of the SV and copy number plots using the argument *scaling_cn_SVs*, which defaults to 1/6. The dimensions of the Giemsa stain track can be modified using the parameters
 *lower_limit_karyotype* and *upper_limit_karyotype*.
 
-```{r, echo=TRUE , fig.width = (12/2.4), fig.height=(5.5/2.4), fig.align='center'}
+```{r, echo=TRUE , fig.width = (12/2.54), fig.height=(5.5/2.54), fig.align='center'}
 chrs=c("chr10")
 chr_selection = data.frame(
   chr=chrs,
@@ -152,7 +152,7 @@ chr_selection = data.frame(
 )
 ```
 
-```{r, echo=TRUE, fig.width = (19/2.4), fig.height=(5.5/2.4), fig.align='center'}
+```{r, echo=TRUE, fig.width = (19/2.54), fig.height=(5.5/2.54), fig.align='center'}
 plot = ReConPlot( sv_data,
 cn_data,
 chr_selection=chr_selection,
@@ -185,7 +185,7 @@ chr_selection = data.frame(
 )
 ```
 
-```{r, echo=TRUE, fig.width = (19/2.4), fig.height=(5.5/2.4), fig.align='center'}
+```{r, echo=TRUE, fig.width = (19/2.54), fig.height=(5.5/2.54), fig.align='center'}
 plot = ReConPlot( sv_data,
 cn_data,
 chr_selection=chr_selection,
@@ -217,7 +217,7 @@ chr_selection = data.frame(
 )
 ```
 
-```{r, echo=TRUE, fig.width = (19/2.4), fig.height=(6/2.4), fig.align='center' , eval=T}
+```{r, echo=TRUE, fig.width = (19/2.54), fig.height=(6/2.54), fig.align='center' , eval=T}
 plot = ReConPlot( sv_data,
 cn_data,
 chr_selection=chr_selection,
@@ -237,43 +237,43 @@ print(plot)
 ```
 
 
-```{r  , echo=F, eval=F}
-chrs=c('chr1',"chr9","chr12")
-chr_selection = data.frame(
-  chr=chrs,
-  start=rep(0 ,length(chrs)),
-  end=rep (250000000, length(chrs))
-)
-```
+<!-- ```{r  , echo=F, eval=F} -->
+<!-- chrs=c('chr1',"chr9","chr12") -->
+<!-- chr_selection = data.frame( -->
+<!--   chr=chrs, -->
+<!--   start=rep(0 ,length(chrs)), -->
+<!--   end=rep (250000000, length(chrs)) -->
+<!-- ) -->
+<!-- ``` -->
 
-```{r, echo=F, fig.width = (19/2.4), fig.height=(5.5/2.4), fig.align='center', eval=FALSE}
-plot = ReConPlot( sv_data,
-cn_data,
-chr_selection=chr_selection,
-genes=c("MDM2","MDM4","MYC","CDK4","EGFR","CDKN2A","CCND2"),
-title="Multichromosomal example with gene names showing highly rearranged chromosomes",
-size_gene_label = 2,
-pos_SVtype_description=1000000,
-color_minor_cn="steelblue2",
-scaling_cn_SVs = 1/2,
-size_title = 7,
-size_chr_labels=9,
-legend_SV_types=T,
-scale_separation_SV_type_labels=1/18, 
-max.cnv = 4, 
-scale_ticks=20000000)
+<!-- ```{r, echo=F, fig.width = (19/2.54), fig.height=(5.5/2.54), fig.align='center', eval=FALSE} -->
+<!-- plot = ReConPlot( sv_data, -->
+<!-- cn_data, -->
+<!-- chr_selection=chr_selection, -->
+<!-- genes=c("MDM2","MDM4","MYC","CDK4","EGFR","CDKN2A","CCND2"), -->
+<!-- title="Multichromosomal example with gene names showing highly rearranged chromosomes", -->
+<!-- size_gene_label = 2, -->
+<!-- pos_SVtype_description=1000000, -->
+<!-- color_minor_cn="steelblue2", -->
+<!-- scaling_cn_SVs = 1/2, -->
+<!-- size_title = 7, -->
+<!-- size_chr_labels=9, -->
+<!-- legend_SV_types=T, -->
+<!-- scale_separation_SV_type_labels=1/18,  -->
+<!-- max.cnv = 4,  -->
+<!-- scale_ticks=20000000) -->
 
-print(plot)
-```
+<!-- print(plot) -->
+<!-- ``` -->
 
 
 The rearrangement plots can be easily saved to a PDF file. In our experience, the following dimensions work well for publication-quality figures and written reports.
-```{r, eval=FALSE, echo=TRUE, fig.width = (12/2.4), fig.height=(4/2.4), fig.align='center'}
-pdf("example_ReConPlot.pdf", width=(19/2.4), height=c(5/2.4))
+```{r, eval=FALSE, echo=TRUE, fig.width = (12/2.54), fig.height=(4/2.54), fig.align='center'}
+pdf("example_ReConPlot.pdf", width=(19/2.54), height=c(5/2.54))
 print(p)
 dev.off()
 ```
-Note that we divide by 2.4 to convert from inches to centimetres.
+Note that we divide by 2.54 to convert from inches to centimetres.
 
 
 ## License

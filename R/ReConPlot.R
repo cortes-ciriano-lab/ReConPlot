@@ -282,7 +282,9 @@ ReConPlot <- function(sv,
                              chr==chr_selection$chr[i] &
                                ((start >= chr_selection$start[i] & end <= chr_selection$end[i]) |
                                   (start <= chr_selection$start[i] & end >= chr_selection$end[i]) |
-                                  (start >= chr_selection$start[i] & start <= chr_selection$end[i])))
+                                  	(start <= chr_selection$start[i] & end >= chr_selection$start[i]) |
+                                  (start >= chr_selection$start[i] & start <= chr_selection$end[i]))
+	  )
       karyo_subset[karyo_subset$start < chr_selection$start[i],"start"] <- chr_selection$start[i]
       karyo_subset[karyo_subset$end > chr_selection$end[i],"end"] <- chr_selection$end[i]
       karyo.filt=rbind(karyo.filt,karyo_subset)
@@ -360,8 +362,7 @@ ReConPlot <- function(sv,
   #karyotype_data_now$chr = factor(karyotype_data_now$chr, levels=chr_selection$chr)
   p = p + geom_rect(data=karyotype_data_now,
                     mapping = aes(xmin = start, xmax = end, ymin = lower_limit_karyotype, ymax = upper_limit_karyotype, group=chr), # can change the default values for karyotype
-                    fill = karyotype_data_now$color, color="black",size=.1)
-
+                    fill = karyotype_data_now$color, color="black",size=.1) 
    chromosome_labeller <- function(chr, value){
      chrm_name=gsub("chr", "", chr)
      return(paste0("Chromosome ", chrm_name, " (Mb)"))
