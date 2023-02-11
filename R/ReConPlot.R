@@ -45,8 +45,8 @@ options(scipen=999)
 #' @param colour_t2tINV Colour of the arcs representing tail-to-tail inversions (t2tINV).
 #' @param size_gene_label Size of the gene labels. Defaults to 2.2.
 #' @param color_minor_cn Colour for the horizontal bars representing the minor copy number values.
-#' @param curvature_intrachr_SVs Curvature for the arcs represeting intrachromosomal SVs. Defaults to -0.3
-#' @param curvature_interchr_SVs Curvature for the arcs represeting interchromosomal SVs. Defaults to -0.35
+#' @param curvature_intrachr_SVs Curvature for the arcs represeting intrachromosomal SVs. Defaults to -0.15
+#' @param curvature_interchr_SVs Curvature for the arcs represeting interchromosomal SVs. Defaults to -0.08
 #' @param max.cnv Cap on the total copy number (for the minor we do not need as the minor will never be very high). Defaults to 10.
 #' @param npc_now
 #' @param genome_version Reference genome used. Can be either hg19, hg38 or T2T (for T2T-CHM13v1.1).
@@ -78,8 +78,8 @@ ReConPlot <- function(sv,
 						            colour_TRA="darkgray",
                         size_gene_label=1.5,
                         color_minor_cn="#8491B4B2",
-                        curvature_intrachr_SVs=-0.3,
-                        curvature_interchr_SVs=-0.08, #35,
+                        curvature_intrachr_SVs=-0.15,
+                        curvature_interchr_SVs=-0.08, 
                         max.cnv=8,
                         npc_now=.00625 * 3,
                         scale_ticks=20000000,
@@ -178,7 +178,7 @@ ReConPlot <- function(sv,
       #      I commented it out and c = curvature_intrachr_SVs always
         
         if (abs(as.integer(x["pos2"])-as.integer(x["pos1"])) <= 10000000){
-          c = 3*curvature_intrachr_SVs
+          c = 4*curvature_intrachr_SVs
         } else {c = curvature_intrachr_SVs}
         # c = curvature_intrachr_SVs
       }
@@ -438,7 +438,6 @@ ReConPlot <- function(sv,
   #----------------------------------------------------------------------------
   #if (nrow(intraSV) >= 1){
   if (!is.null(intraSV)){
-    #JEVI add if statement to check nrows otherwise it fails when no SVs
     if (nrow(intraSV) >= 1){
       for (i in 1:nrow(intraSV)){
         # get the maximum coordinates for the chr at hand
