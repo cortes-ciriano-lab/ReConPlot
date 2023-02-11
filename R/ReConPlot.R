@@ -52,6 +52,7 @@ options(scipen=999)
 #' @param genome_version Reference genome used. Can be either hg19, hg38 or T2T (for T2T-CHM13v1.1).
 #' @param scale_ticks Spacing of breaks in the x axis (in bp). Defaults to 20000000 (i.e., 20Mb).
 #' @param xscale Scale for the x axis. Defaults to 10*10^6 to put the x axis in Mbp.
+#' @param size_interchr_SV_tip Size of the line indicating interchromosomal SVs involving chromosomes not shown (that is, not included in chr_selection).
 #' @examples Please the tutorial of the package.
 #' @export
 
@@ -70,12 +71,12 @@ ReConPlot <- function(sv,
                         size_chr_labels=7,
                         size_title=7,
                         size_text=5,
-						            lower_limit_karyotype=-0.7,
-						            upper_limit_karyotype=-0.2,
+						lower_limit_karyotype=-0.7,
+					    upper_limit_karyotype=-0.2,
                         colour_band2= "antiquewhite1", colour_band1="grey86",
                         colour_DEL = "orange", colour_h2hINV="forestgreen", 
-						            colour_DUP="darkblue", colour_t2tINV="black",
-						            colour_TRA="darkgray",
+					    colour_DUP="darkblue", colour_t2tINV="black",
+					    colour_TRA="darkgray",
                         size_gene_label=1.5,
                         color_minor_cn="#8491B4B2",
                         curvature_intrachr_SVs=-0.15,
@@ -83,7 +84,8 @@ ReConPlot <- function(sv,
                         max.cnv=8,
                         npc_now=.00625 * 3,
                         scale_ticks=20000000,
-						            genome_version="hg38"
+						size_interchr_SV_tip = 0.2,
+					    genome_version="hg38"
                         ){
 
   #----------------------------------------------------------------
@@ -482,7 +484,7 @@ ReConPlot <- function(sv,
           p = p +
             geom_curve(data = data.frame(cov = 1, chr = intraSV$chr1[i]),
                        x=intraSV$pos1[i], xend=intraSV$pos1[i]+x_range, #2000000,
-                       y=max_y_svs_3-0.2, yend= max_y_svs_3, angle=45, curvature=0,  size=0.1, colour=intraSV$colour[i])
+                       y=max_y_svs_3-size_interchr_SV_tip, yend= max_y_svs_3, angle=45, curvature=0,  size=0.1, colour=intraSV$colour[i])
 
         }
 
@@ -497,7 +499,7 @@ ReConPlot <- function(sv,
           p = p +
             geom_curve(data = data.frame(cov = 1, chr = intraSV$chr1[i]),
                        x=intraSV$pos2[i], xend=intraSV$pos2[i]-x_range, #2000000,
-                       y=max_y_svs_3-0.2, yend=max_y_svs_3 , angle=45, curvature=0,  size=0.1, colour=intraSV$colour[i])
+                       y=max_y_svs_3-size_interchr_SV_tip, yend=max_y_svs_3 , angle=45, curvature=0,  size=0.1, colour=intraSV$colour[i])
         }
       }
     }
@@ -596,13 +598,13 @@ ReConPlot <- function(sv,
           p = p +
             geom_curve(data = data.frame(cov = 1, chr = interSV$chr2[i]),
                        x=interSV$pos2[i], xend=interSV$pos2[i],
-                       y=0, yend=max_y_svs_3-0.2, curvature=0,  size=0.1, colour=interSV$colour[i])
+                       y=0, yend=max_y_svs_3-size_interchr_SV_tip, curvature=0,  size=0.1, colour=interSV$colour[i])
           # add diagonal line on top
 		  x_range = (chr_selection$end[which(chr_selection$chr==interSV$chr1[i])] - chr_selection$start[which(chr_selection$chr==interSV$chr1[i])]) * 0.01
           p = p +
             geom_curve(data = data.frame(cov = 1, chr = interSV$chr2[i]),
                        x=interSV$pos2[i], xend=interSV$pos2[i]-x_range, #2000000,
-                       y=max_y_svs_3-0.2, yend=max_y_svs_3 , angle=45, curvature=0,  size=0.1, colour=interSV$colour[i])
+                       y=max_y_svs_3-size_interchr_SV_tip, yend=max_y_svs_3 , angle=45, curvature=0,  size=0.1, colour=interSV$colour[i])
         }
 
         # the rightmost breakpoint is outside of the range
@@ -611,13 +613,13 @@ ReConPlot <- function(sv,
           p = p +
             geom_curve(data = data.frame(cov = 1, chr = interSV$chr1[i]),
                        x=interSV$pos1[i], xend=interSV$pos1[i],
-                       y=0, yend=max_y_svs_3-0.2, curvature=0,  size=0.1, colour=interSV$colour[i])
+                       y=0, yend=max_y_svs_3-size_interchr_SV_tip, curvature=0,  size=0.1, colour=interSV$colour[i])
           # add diagonal line on top
 		  x_range = (chr_selection$end[which(chr_selection$chr==interSV$chr1[i])] - chr_selection$start[which(chr_selection$chr==interSV$chr1[i])]) * 0.01
           p = p +
             geom_curve(data = data.frame(cov = 1, chr = interSV$chr1[i]),
                        x=interSV$pos1[i], xend=interSV$pos1[i]-x_range, #2000000,
-                       y=max_y_svs_3-0.2, yend=max_y_svs_3 , angle=45, curvature=0,  size=0.1, colour=interSV$colour[i])
+                       y=max_y_svs_3-size_interchr_SV_tip, yend=max_y_svs_3 , angle=45, curvature=0,  size=0.1, colour=interSV$colour[i])
         }
       }
     }
@@ -649,7 +651,7 @@ ReConPlot <- function(sv,
             p = p +
               geom_curve(data = data.frame(cov = 1, chr = interSV_other_chrs$chr2[i]),
                          x=interSV_other_chrs$pos2[i], xend=interSV_other_chrs$pos2[i]-x_range, #2000000,
-                         y=max_y_svs_3-0.2, yend=max_y_svs_3 , angle=45, curvature=0,  size=0.1, colour=interSV_other_chrs$colour[i])
+                         y=max_y_svs_3-size_interchr_SV_tip, yend=max_y_svs_3 , angle=45, curvature=0,  size=0.1, colour=interSV_other_chrs$colour[i])
           }
         }
   
@@ -673,7 +675,7 @@ ReConPlot <- function(sv,
             p = p +
               geom_curve(data = data.frame(cov = 1, chr = interSV_other_chrs$chr1[i]),
                          x=interSV_other_chrs$pos1[i], xend=interSV_other_chrs$pos1[i]-x_range, #2000000,
-                         y=max_y_svs_3-0.2, yend=max_y_svs_3 , angle=45, curvature=0,  size=0.1, colour=interSV_other_chrs$colour[i])
+                         y=max_y_svs_3-size_interchr_SV_tip, yend=max_y_svs_3 , angle=45, curvature=0,  size=0.1, colour=interSV_other_chrs$colour[i])
           }
         }
       }
