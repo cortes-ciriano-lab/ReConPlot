@@ -71,12 +71,12 @@ ReConPlot <- function(sv,
                         size_chr_labels=7,
                         size_title=7,
                         size_text=5,
-						lower_limit_karyotype=-0.7,
-					    upper_limit_karyotype=-0.2,
+						            lower_limit_karyotype=-0.7,
+					              upper_limit_karyotype=-0.2,
                         colour_band2= "antiquewhite1", colour_band1="grey86",
                         colour_DEL = "orange", colour_h2hINV="forestgreen", 
-					    colour_DUP="darkblue", colour_t2tINV="black",
-					    colour_TRA="darkgray",
+					              colour_DUP="darkblue", colour_t2tINV="black",
+					              colour_TRA="darkgray",
                         size_gene_label=1.5,
                         color_minor_cn="#8491B4B2",
                         curvature_intrachr_SVs=-0.15,
@@ -84,8 +84,8 @@ ReConPlot <- function(sv,
                         max.cnv=8,
                         npc_now=.00625 * 3,
                         scale_ticks=20000000,
-						size_interchr_SV_tip = 0.2,
-					    genome_version="hg38"
+						            size_interchr_SV_tip = 0.2,
+					              genome_version="hg38"
                         ){
 
   #----------------------------------------------------------------
@@ -104,9 +104,9 @@ ReConPlot <- function(sv,
   if (sum (! (required_SV_columns %in% names(sv)) ) > 0 ){
 	  stop("Error: the input SV dataframe is missing required columns. The required columns are: chr1, pos1, chr2, pos2 and strands")
   }
-  required_cn_columns = c("chr", "start", "end", "Total_copy_number","Tumour_minor" )
+  required_cn_columns = c("chr", "start", "end", "copyNumber","minorAlleleCopyNumber" )
   if (sum (! (required_cn_columns %in% names(cnv)) ) > 0 ){
-	   stop("Error: the input copy number dataframe is missing required columns. The required columns are: chr, start, end, Total_copy_number, and Tumour_minor")
+	   stop("Error: the input copy number dataframe is missing required columns. The required columns are: chr, start, end, copyNumber, and minorAlleleCopyNumber")
   }
   if(is.data.frame(cnv) == FALSE){stop("Error: the copy number data must be input in dataframe format")}
   if(is.data.frame(sv) == FALSE){stop("Error: the SV data must be input in dataframe format")}
@@ -324,8 +324,8 @@ ReConPlot <- function(sv,
 
   # cnv.plot$chr = cnv.plot$chr
   # those with very high copy number value, modify
-  cnv.plot$Total_copy_number[which(cnv.plot$Total_copy_number >= max.cnv)] = max.cnv
-  max_y = max.cnv # max(c( cnv.plot$Total_copy_number)) # max copy number value
+  cnv.plot$copyNumber[which(cnv.plot$copyNumber >= max.cnv)] = max.cnv
+  max_y = max.cnv # max(c( cnv.plot$copyNumber)) # max copy number value
   max_y_rectagle = max_y
   max_y = max_y + (max_y* percentage_increase_y_axis) # add 10% to y axis
   max_y_svs_1 = max_y  + ( (scaling_cn_SVs) * max_y)
@@ -389,11 +389,11 @@ ReConPlot <- function(sv,
   # breaks_y = c(breaks_y, unique(floor(quantile(2:max_y, probs = seq(.1, .9, by = .1)))))
   ## plot copy number
   p = p +
-    geom_segment(aes(x = start, y = Tumour_minor, xend = end,
-                     yend = Tumour_minor, group=chr), # ICC group
+    geom_segment(aes(x = start, y = minorAlleleCopyNumber, xend = end,
+                     yend = minorAlleleCopyNumber, group=chr), # ICC group
                  data = cnv.plot[cnv.plot$chr %in% chr_selection$chr,], colour=color_minor_cn,size=1) +
-    geom_segment(aes(x = start, y = Total_copy_number, xend = end,
-                     yend = Total_copy_number,  group=chr), # ICC group
+    geom_segment(aes(x = start, y = copyNumber, xend = end,
+                     yend = copyNumber,  group=chr), # ICC group
                  data = cnv.plot[cnv.plot$chr %in% chr_selection$chr,], colour="black",size=1) +
     facet_grid( . ~ factor(chr, levels = chr_selection$chr), # not converting to factor to make the labeller work
                 scales = "free_x", space = "free_x", switch = "x", #) +
