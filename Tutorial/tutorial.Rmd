@@ -1,6 +1,6 @@
 ---
 title: "Visualizing genomic rearrangements using the R package *ReConPlot*"
-author: "José Espejo Valle-Inclán and Isidro Cortes-Ciriano*"
+author: "Jose Espejo Valle-Inclán and Isidro Cortes-Ciriano*"
 date: "07/05/2022"
 contact: icortes@ebi.ac.uk
 output:
@@ -27,8 +27,8 @@ While the primary focus of *ReConPlot* is the visualization of complex somatic c
 In the next section we provide examples of the functionalities of *ReConPlot* and provide best practices to generate high-quality plots.
 First, we load the package.
 ```{r}
-library(ReConPlot)
 library(ggplot2)
+library(ReConPlot)
 ```
 
 Next, we load test data provided with the package, which corresponds to a human glioblastoma.
@@ -65,7 +65,7 @@ chr_selection = data.frame(
 Once the regions of interest is defined, we can generate the rearrangement plot. For example, we can plot the genomic rearrangement profile for chromosome 10:
 
 ```{r, echo=TRUE, fig.width = (7.5/2.4), fig.height=(5.5/2.4), fig.align='center'}
-plot = ReConPlot( sv_data,
+plot = ReConPlot(sv_data,
 cn_data,
 chr_selection=chr_selection,
 legend_SV_types=T,
