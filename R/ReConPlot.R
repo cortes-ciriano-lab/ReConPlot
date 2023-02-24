@@ -718,11 +718,11 @@ ReConPlot <- function(sv,
             geom_curve(data = data.frame(cov = 1, chr = gene_coord_now$chr),
                        x=gene_coord_now$start, xend=gene_coord_now$start,
                        y=0, #max_y_svs_2 + (max_y_svs_3-max_y_svs_2)/2,
-                       yend=max_y_svs_3-1.5, curvature=0,  size=0.25, colour="green",alpha=.75) +
+                       yend=max_y_svs_3-1, curvature=0,  size=0.25, colour="green",alpha=.75) +
             geom_rect(data = data.frame(cov = 1, chr = gene_coord_now$chr),
                       xmin=gene_coord_now$start, xmax=gene_coord_now$end,
                       ymin=0, #max_y_svs_2 + (max_y_svs_3-max_y_svs_2)/2,
-                      ymax=max_y_svs_3-1.5,
+                      ymax=max_y_svs_3-1,
                       size=0.25, fill = "green", alpha=.6)
           
           
@@ -733,12 +733,12 @@ ReConPlot <- function(sv,
           # )
           dat_text <- data.frame(label = gene,
                                  chr= factor(gene_coord_now$chr,levels = chr_selection$chr),
-                                 pos=(gene_coord_now$start+gene_coord_now$end)/2, y= max_y_svs_3-.75
+                                 pos=(gene_coord_now$start+gene_coord_now$end)/2, y= max_y_svs_3-.5
           )
           p = p + geom_text(data = dat_text, mapping = aes(x= pos, y = y, label = label), 
                             size=size_gene_label ,fontface="italic") 
           # add point
-          p = p + geom_point(data= dat_text, mapping = aes(x= pos, y = max_y_svs_3-1.5),
+          p = p + geom_point(data= dat_text, mapping = aes(x= pos, y = max_y_svs_3-1),
                              size=.5 ,colour="darkblue")
         }
       }
