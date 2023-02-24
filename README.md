@@ -11,6 +11,3 @@ Please see the detailed tutorial and documentation of the package for examples a
 If you have any comments or suggestions please raise an issue or contact us:\
 Jose Espejo: jespejo@ebi.ac.uk\
 Isidro Cortes-Ciriano: icortes@ebi.ac.uk
-
-# License
-**ReConPlot is free for academic use only.** If you are not a member of a public funded academic and/or education and/or research institution you must obtain a commercial license from EMBL Enterprise Management GmbH (EMBLEM); please email EMBLEM (info@embl-em.de).
