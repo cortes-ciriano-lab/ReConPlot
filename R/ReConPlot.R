@@ -47,7 +47,7 @@ options(scipen=999)
 #' @param color_minor_cn Colour for the horizontal bars representing the minor copy number values.
 #' @param curvature_intrachr_SVs Curvature for the arcs represeting intrachromosomal SVs. Defaults to -0.15
 #' @param curvature_interchr_SVs Curvature for the arcs represeting interchromosomal SVs. Defaults to -0.08
-#' @param max.cnv Cap on the total copy number (for the minor we do not need as the minor will never be very high). Defaults to 10.
+#' @param max.cn Cap on the total copy number (for the minor we do not need as the minor will never be very high). Defaults to 10.
 #' @param npc_now
 #' @param genome_version Reference genome used. Can be either hg19, hg38 or T2T (for T2T-CHM13v1.1).
 #' @param scale_ticks Spacing of breaks in the x axis (in bp). Defaults to 20000000 (i.e., 20Mb).
@@ -81,10 +81,11 @@ ReConPlot <- function(sv,
                         color_minor_cn="#8491B4B2",
                         curvature_intrachr_SVs=-0.15,
                         curvature_interchr_SVs=-0.08, 
-                        max.cnv=8,
+						            max.cn=8,
                         npc_now=.00625 * 3,
                         scale_ticks=20000000,
 						            size_interchr_SV_tip = 0.2,
+						            size_sv_line=0.1,
 					              genome_version="hg38"
                         ){
 
@@ -282,7 +283,8 @@ ReConPlot <- function(sv,
                              chr==chr_selection$chr[i] &
                                ((start >= chr_selection$start[i] & end <= chr_selection$end[i]) |
                                   (start <= chr_selection$start[i] & end >= chr_selection$end[i]) |
-                                  (start >= chr_selection$start[i] & start <= chr_selection$end[i])))
+                                  (start >= chr_selection$start[i] & start <= chr_selection$end[i]) |
+                                  (end >= chr_selection$start[i] & end <= chr_selection$end[i]) ))
       karyo_subset[karyo_subset$start < chr_selection$start[i],"start"] <- chr_selection$start[i]
       karyo_subset[karyo_subset$end > chr_selection$end[i],"end"] <- chr_selection$end[i]
       karyo.filt=rbind(karyo.filt,karyo_subset)
@@ -311,7 +313,8 @@ ReConPlot <- function(sv,
                              chr==chr_selection$chr[i] &
                                ((start >= chr_selection$start[i] & end <= chr_selection$end[i]) |
                                   (start <= chr_selection$start[i] & end >= chr_selection$end[i]) |
-                                  (start >= chr_selection$start[i] & start <= chr_selection$end[i])))
+                                  (start >= chr_selection$start[i] & start <= chr_selection$end[i]) |
+                                  (end >= chr_selection$start[i] & end <= chr_selection$end[i]) ))
       karyo_subset[karyo_subset$start < chr_selection$start[i],"start"] <- chr_selection$start[i]
       karyo_subset[karyo_subset$end > chr_selection$end[i],"end"] <- chr_selection$end[i]
       karyo.filt=rbind(karyo.filt,karyo_subset)
@@ -322,8 +325,8 @@ ReConPlot <- function(sv,
 
   # cnv.plot$chr = cnv.plot$chr
   # those with very high copy number value, modify
-  cnv.plot$copyNumber[which(cnv.plot$copyNumber >= max.cnv)] = max.cnv
-  max_y = max.cnv # max(c( cnv.plot$copyNumber)) # max copy number value
+  cnv.plot$copyNumber[which(cnv.plot$copyNumber >= max.cn)] = max.cn
+  max_y = max.cn # max(c( cnv.plot$copyNumber)) # max copy number value
   max_y_rectagle = max_y
   max_y = max_y + (max_y* percentage_increase_y_axis) # add 10% to y axis
   max_y_svs_1 = max_y  + ( (scaling_cn_SVs) * max_y)
@@ -380,10 +383,10 @@ ReConPlot <- function(sv,
 
 
   # define the breaks on the y axis (cn) to show:
-   if (max.cnv < 8) {break.step = 1}
-   else if (max.cnv >= 8 & max.cnv < 25) {break.step = 2}
+   if (max.cn < 8) {break.step = 1}
+   else if (max.cn >= 8 & max.cn < 25) {break.step = 2}
    else (break.step = 5)
-   breaks_y = seq(0,max.cnv, break.step)
+   breaks_y = seq(0,max.cn, break.step)
   # breaks_y = c(0,1,2)
   # breaks_y = c(breaks_y, unique(floor(quantile(2:max_y, probs = seq(.1, .9, by = .1)))))
   ## plot copy number
@@ -460,16 +463,16 @@ ReConPlot <- function(sv,
             geom_curve(data = data.frame(cov = 1, chr = intraSV$chr1[i]),
                        x=intraSV$pos1[i], xend=intraSV$pos2[i],
                        y=intraSV$max_y_sv[i], yend=intraSV$max_y_sv[i], curvature=intraSV$curve[i],
-                       size=0.1,colour=intraSV$colour[i])
+                       size=size_sv_line,colour=intraSV$colour[i])
           p = p +
             # vertical
             geom_curve(data = data.frame(cov = 1, chr = intraSV$chr1[i]),
                        x=intraSV$pos1[i], xend=intraSV$pos1[i],
-                       y=0, yend=intraSV$max_y_sv[i], curvature=0,  size=0.1, colour=intraSV$colour[i]) +
+                       y=0, yend=intraSV$max_y_sv[i], curvature=0,  size=size_sv_line, colour=intraSV$colour[i]) +
             # vertical
             geom_curve(data = data.frame(cov = 1, chr = intraSV$chr1[i]),
                        x=intraSV$pos2[i], xend=intraSV$pos2[i],
-                       y=0, yend=intraSV$max_y_sv[i], curvature=0,  size=0.1, colour=intraSV$colour[i])
+                       y=0, yend=intraSV$max_y_sv[i], curvature=0,  size=size_sv_line, colour=intraSV$colour[i])
         }
       
         # cases now with left size in range
@@ -478,13 +481,13 @@ ReConPlot <- function(sv,
           p = p +
             geom_curve(data = data.frame(cov = 1, chr = intraSV$chr1[i]),
                        x=intraSV$pos1[i], xend=intraSV$pos1[i],
-                       y=0, yend=max_y_svs_3-0.15, curvature=0,  size=0.1, colour=intraSV$colour[i])
+                       y=0, yend=max_y_svs_3-0.15, curvature=0,  size=size_sv_line, colour=intraSV$colour[i])
           # add diagonal line on top
   		  x_range = (chr_selection$end[which(chr_selection$chr==intraSV$chr1[i])] - chr_selection$start[which(chr_selection$chr==intraSV$chr1[i])]) * 0.01
           p = p +
             geom_curve(data = data.frame(cov = 1, chr = intraSV$chr1[i]),
                        x=intraSV$pos1[i], xend=intraSV$pos1[i]+x_range, #2000000,
-                       y=max_y_svs_3-size_interchr_SV_tip, yend= max_y_svs_3, angle=45, curvature=0,  size=0.1, colour=intraSV$colour[i])
+                       y=max_y_svs_3-size_interchr_SV_tip, yend= max_y_svs_3, angle=45, curvature=0,  size=size_sv_line, colour=intraSV$colour[i])
 
         }
 
@@ -493,13 +496,13 @@ ReConPlot <- function(sv,
           p = p +
             geom_curve(data = data.frame(cov = 1, chr = intraSV$chr1[i]),
                        x=intraSV$pos2[i], xend=intraSV$pos2[i],
-                       y=0, yend=max_y_svs_3-0.15, curvature=0,  size=0.1, colour=intraSV$colour[i])
+                       y=0, yend=max_y_svs_3-0.15, curvature=0,  size=size_sv_line, colour=intraSV$colour[i])
           # add diagonal line on top
   		  x_range = (chr_selection$end[which(chr_selection$chr==intraSV$chr1[i])] - chr_selection$start[which(chr_selection$chr==intraSV$chr1[i])]) * 0.01
           p = p +
             geom_curve(data = data.frame(cov = 1, chr = intraSV$chr1[i]),
                        x=intraSV$pos2[i], xend=intraSV$pos2[i]-x_range, #2000000,
-                       y=max_y_svs_3-size_interchr_SV_tip, yend=max_y_svs_3 , angle=45, curvature=0,  size=0.1, colour=intraSV$colour[i])
+                       y=max_y_svs_3-size_interchr_SV_tip, yend=max_y_svs_3 , angle=45, curvature=0,  size=size_sv_line, colour=intraSV$colour[i])
         }
       }
     }
@@ -579,18 +582,18 @@ ReConPlot <- function(sv,
             # on the left
             geom_curve(data = data.frame(cov = 1, chr = interSV$chr1[i]),
                        x=interSV$pos1[i], xend=interSV$pos1[i],
-                       y=0, yend=interSV$max_y_sv[i], curvature=0,  size=0.1, colour=interSV$colour[i]) +
+                       y=0, yend=interSV$max_y_sv[i], curvature=0,  size=size_sv_line, colour=interSV$colour[i]) +
             # on the right
             geom_curve(data = data.frame(cov = 1, chr = interSV$chr2[i]),
                        x=interSV$pos2[i], xend=interSV$pos2[i],
-                       y=0, yend=interSV$max_y_sv[i], curvature=0,  size=0.1, colour=interSV$colour[i])
+                       y=0, yend=interSV$max_y_sv[i], curvature=0,  size=size_sv_line, colour=interSV$colour[i])
           # add arc
           p = p +
             geom_curve(data = data.frame(cov = 1, chr = chrs_now[1,1]),
                        x=interSV$pos1[i], # the start in chr9
                        xend=offset,
                        y=interSV$max_y_sv[i], yend=interSV$max_y_sv[i], curvature=interSV$curve[i],
-                       size=.1,colour=interSV$colour[i])
+                       size=size_sv_line,colour=interSV$colour[i])
         }
         # the leftmost breakpoint is outside of the range
         if(!in_range_chr1){
@@ -598,13 +601,13 @@ ReConPlot <- function(sv,
           p = p +
             geom_curve(data = data.frame(cov = 1, chr = interSV$chr2[i]),
                        x=interSV$pos2[i], xend=interSV$pos2[i],
-                       y=0, yend=max_y_svs_3-size_interchr_SV_tip, curvature=0,  size=0.1, colour=interSV$colour[i])
+                       y=0, yend=max_y_svs_3-size_interchr_SV_tip, curvature=0,  size=size_sv_line, colour=interSV$colour[i])
           # add diagonal line on top
 		  x_range = (chr_selection$end[which(chr_selection$chr==interSV$chr1[i])] - chr_selection$start[which(chr_selection$chr==interSV$chr1[i])]) * 0.01
           p = p +
             geom_curve(data = data.frame(cov = 1, chr = interSV$chr2[i]),
                        x=interSV$pos2[i], xend=interSV$pos2[i]-x_range, #2000000,
-                       y=max_y_svs_3-size_interchr_SV_tip, yend=max_y_svs_3 , angle=45, curvature=0,  size=0.1, colour=interSV$colour[i])
+                       y=max_y_svs_3-size_interchr_SV_tip, yend=max_y_svs_3 , angle=45, curvature=0,  size=size_sv_line, colour=interSV$colour[i])
         }
 
         # the rightmost breakpoint is outside of the range
@@ -613,13 +616,13 @@ ReConPlot <- function(sv,
           p = p +
             geom_curve(data = data.frame(cov = 1, chr = interSV$chr1[i]),
                        x=interSV$pos1[i], xend=interSV$pos1[i],
-                       y=0, yend=max_y_svs_3-size_interchr_SV_tip, curvature=0,  size=0.1, colour=interSV$colour[i])
+                       y=0, yend=max_y_svs_3-size_interchr_SV_tip, curvature=0,  size=size_sv_line, colour=interSV$colour[i])
           # add diagonal line on top
 		  x_range = (chr_selection$end[which(chr_selection$chr==interSV$chr1[i])] - chr_selection$start[which(chr_selection$chr==interSV$chr1[i])]) * 0.01
           p = p +
             geom_curve(data = data.frame(cov = 1, chr = interSV$chr1[i]),
                        x=interSV$pos1[i], xend=interSV$pos1[i]-x_range, #2000000,
-                       y=max_y_svs_3-size_interchr_SV_tip, yend=max_y_svs_3 , angle=45, curvature=0,  size=0.1, colour=interSV$colour[i])
+                       y=max_y_svs_3-size_interchr_SV_tip, yend=max_y_svs_3 , angle=45, curvature=0,  size=size_sv_line, colour=interSV$colour[i])
         }
       }
     }
@@ -645,13 +648,13 @@ ReConPlot <- function(sv,
             p = p +
               geom_curve(data = data.frame(cov = 1, chr = interSV_other_chrs$chr2[i]),
                          x=interSV_other_chrs$pos2[i], xend=interSV_other_chrs$pos2[i],
-                         y=0, yend=max_y_svs_3-0.2, curvature=0,  size=0.1, colour=interSV_other_chrs$colour[i])
+                         y=0, yend=max_y_svs_3-0.2, curvature=0,  size=size_sv_line, colour=interSV_other_chrs$colour[i])
             # add diagonal line on top
   		  x_range = (chr_selection$end[which(chr_selection$chr==interSV_other_chrs$chr2[i])] - chr_selection$start[which(chr_selection$chr==interSV_other_chrs$chr2[i])]) * 0.01
             p = p +
               geom_curve(data = data.frame(cov = 1, chr = interSV_other_chrs$chr2[i]),
                          x=interSV_other_chrs$pos2[i], xend=interSV_other_chrs$pos2[i]-x_range, #2000000,
-                         y=max_y_svs_3-size_interchr_SV_tip, yend=max_y_svs_3 , angle=45, curvature=0,  size=0.1, colour=interSV_other_chrs$colour[i])
+                         y=max_y_svs_3-size_interchr_SV_tip, yend=max_y_svs_3 , angle=45, curvature=0,  size=size_sv_line, colour=interSV_other_chrs$colour[i])
           }
         }
   
@@ -669,13 +672,13 @@ ReConPlot <- function(sv,
             p = p +
               geom_curve(data = data.frame(cov = 1, chr = interSV_other_chrs$chr1[i]),
                          x=interSV_other_chrs$pos1[i], xend=interSV_other_chrs$pos1[i],
-                         y=0, yend=max_y_svs_3-0.2, curvature=0,  size=0.1, colour=interSV_other_chrs$colour[i])
+                         y=0, yend=max_y_svs_3-0.2, curvature=0,  size=size_sv_line, colour=interSV_other_chrs$colour[i])
             # add diagonal line on top
   		  x_range = (chr_selection$end[which(chr_selection$chr==interSV_other_chrs$chr1[i])] - chr_selection$start[which(chr_selection$chr==interSV_other_chrs$chr1[i])]) * 0.01
             p = p +
               geom_curve(data = data.frame(cov = 1, chr = interSV_other_chrs$chr1[i]),
                          x=interSV_other_chrs$pos1[i], xend=interSV_other_chrs$pos1[i]-x_range, #2000000,
-                         y=max_y_svs_3-size_interchr_SV_tip, yend=max_y_svs_3 , angle=45, curvature=0,  size=0.1, colour=interSV_other_chrs$colour[i])
+                         y=max_y_svs_3-size_interchr_SV_tip, yend=max_y_svs_3 , angle=45, curvature=0,  size=size_sv_line, colour=interSV_other_chrs$colour[i])
           }
         }
       }
