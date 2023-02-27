@@ -21,7 +21,7 @@ Visualization of SVs and copy number aberrations is often required to identify t
 Here, we present the R package *ReConPlot*, which provides functionalities for the visualization of copy number profiles and SVs. The package relies on public packages, including the popular ggplot2, thus allowing further customization of the plots.
 
 To visualize genomic rearrangement profiles, *ReConPlot* requires structural variation and copy number data in the commonly used bed format. For SVs, *ReConPlot* uses breakend notation to facilitate compatibility with any SV caller conforming with best practices for reporting SVs in vcf format.
-While the primary focus of *ReConPlot* is the visualization of complex somatic copy number and SVs in the context of cancer, the functionalities provided can be used to visualize genomics data from non-cancer samples, such as somatic aberrations detected in normal tissues, single-cell whole-genome data or others. However, note that at present *ReConPlot* only supports the build of the human reference genome GRCh38. 
+While the primary focus of *ReConPlot* is the visualization of complex somatic copy number and SVs in the context of cancer, the functionalities provided can be used to visualize genomics data from non-cancer samples, such as somatic aberrations detected in normal tissues, single-cell whole-genome data or others. However, note that at present *ReConPlot* only supports the build of the human reference genome GRCh37, GRCh38 and T2T-CHM13. 
 
 ## Examples
 In the next section we provide examples of the functionalities of *ReConPlot* and provide best practices to generate high-quality plots.
@@ -69,7 +69,7 @@ plot = ReConPlot(sv_data,
 cn_data,
 chr_selection=chr_selection,
 legend_SV_types=T,
-pos_SVtype_description=1000000,
+pos_SVtype_description=115000000,
 scale_separation_SV_type_labels=1/23,
 title="Example")
 
@@ -77,7 +77,7 @@ print(plot)
 
 ```
 
-In this example, the total and minor copy number data are shown in black and red, respectively, on top of a representation of the Giemsa stain annotation as reported in the UCSC Genome Browser. The SVs are shown as arcs following the notation established by the Pan-Cancer Analysis of Whole Genomes Project (PCAWG). The colour arbitrarily assigned to each SV type is shown in the legend on the left-hand side (see below for options to modify graphical parameters). SVs are classified into 4 categories depending on the read orientiation at the breakpoints: deletions (+-), duplications (-+), and inversions (++ and --).
+In this example, the total and minor copy number data are shown in black and red, respectively, on top of a representation of the Giemsa stain annotation as reported in the UCSC Genome Browser. The SVs are shown as arcs following the notation established by the Pan-Cancer Analysis of Whole Genomes Project (PCAWG). The colour arbitrarily assigned to each SV type is shown in the legend on the left-hand side (see below for options to modify graphical parameters). SVs are classified into 4 categories depending on the read orientiation at the breakpoints: deletion-like SVs (+-), duplication-like SVs (-+), and inversions (++ and --).
 
 In our experience, a width of 6cm per chromosome, and a height of 5 cm per chromosome are adequate to display rearrangement plots and save them for publications.
 
@@ -275,11 +275,9 @@ dev.off()
 ```
 Note that we divide by 2.4 to convert from inches to centimetres.
 
-
-## License
-**ReConPlot is free for academic use only**. If you are not a member of a public funded academic and/or education and/or research institution you must obtain a commercial license from EMBL Enterprise Management GmbH (EMBLEM); please email EMBLEM (info@embl-em.de).
-
 ## Contact
-If you have any comments or suggestions please raise an issue or contact Dr. Isidro Cortes-Ciriano: icortes@ebi.ac.uk.
+If you have any comments or suggestions please raise an issue or contact us:
+Jose Espejo: jespejo@ebi.ac.uk
+Isidro Cortes-Ciriano: icortes@ebi.ac.uk
 
 
