@@ -1,6 +1,8 @@
 # ReConPlot
 R package to visualize complex genomic rearrangements by plotting copy number profiles and structural variants.
 
+If you use ReConPlot please cite our publication: https://www.biorxiv.org/content/10.1101/2023.02.24.529890v2
+
 # Installation
 R CMD INSTALL ReConPlot
 
