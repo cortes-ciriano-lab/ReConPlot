@@ -71,8 +71,13 @@ print(plot)
 ```
 Please visit the [tutorial](Tutorial/tutorial.pdf) for advanced usage.
 
-
-
+# Citation
+For now, please cite out [pre-print](https://www.biorxiv.org/content/10.1101/2023.02.24.529890v2) when using ReConPlot:
+```
+ReConPlot – an R package for the visualization and interpretation of genomic rearrangements
+Jose Espejo Valle-Inclán, Isidro Cortés-Ciriano
+bioRxiv 2023.02.24.529890; doi: https://doi.org/10.1101/2023.02.24.529890
+```
 # Contact
 If you have any comments or suggestions please raise an issue or contact us:\
 Jose Espejo Valle-Inclan: jespejo@ebi.ac.uk\
