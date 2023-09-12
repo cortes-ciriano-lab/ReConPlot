@@ -9,7 +9,14 @@ bioRxiv 2023.02.24.529890; doi: https://doi.org/10.1101/2023.02.24.529890
 ```
 
 # Installation
-R CMD INSTALL ReConPlot
+You can clone this repository and install using the following command in the command line:
+```
+R CMD INSTALL ReConPlot/
+```
+Or use devtools to install directly from GitHub within R:
+```
+> devtools::install_github("cortes-ciriano-lab/ReConPlot")
+```
 
 # How to use and examples
 Please see the detailed tutorial and documentation of the package for examples and best practices for using ReConPlot to generate publication-quality figures.
@@ -73,7 +80,6 @@ legend_SV_types=T,
 pos_SVtype_description=1000000,
 scale_separation_SV_type_labels=1/23,
 title="Example")
-
 print(plot)
 ```
 Please visit the [tutorial](Tutorial/tutorial.pdf) for advanced usage.

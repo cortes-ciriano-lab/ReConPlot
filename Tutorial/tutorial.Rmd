@@ -1,7 +1,7 @@
 ---
 title: "Visualizing genomic rearrangements using the R package *ReConPlot*"
 author: "Jose Espejo Valle-Inclán and Isidro Cortes-Ciriano*"
-date: "07/05/2022"
+date: "12/09/2023"
 contact: icortes@ebi.ac.uk
 output:
   pdf_document: default
@@ -228,8 +228,8 @@ size_title = 7,
 size_chr_labels=5,
 legend_SV_types=T,
 scale_separation_SV_type_labels=1/23,
-max.cn = 4, 
-lower_limit_karyotype = -0.4, 
+max.cn = 4,
+lower_limit_karyotype = -0.4,
 upper_limit_karyotype = -0.2,
 scale_ticks=20000000)
 
@@ -270,7 +270,7 @@ print(plot)
 The examples above display chromosomes with a relatively low number of SVs.
 However, it is possible to visualize more complex patterns, such as those detected in chromosome 12 in this sample:
 
-```{r  , echo=TRUE, eval=T }
+```{r, echo=TRUE, eval=T }
 chrs=c('chr1',"chr9","chr12")
 chr_selection = data.frame(
   chr=chrs,
@@ -291,43 +291,14 @@ color_minor_cn="steelblue2",
 size_title = 7,
 size_chr_labels=7,
 legend_SV_types=T,
-scale_separation_SV_type_labels=1/23, 
-max.cn = 10, 
+scale_separation_SV_type_labels=1/23,
+max.cn = 10,
 scale_ticks=20000000)
 
 print(plot)
 ```
 
-```{r  , echo=F, eval=F}
-chrs=c('chr1',"chr9","chr12")
-chr_selection = data.frame(
-  chr=chrs,
-  start=rep(0 ,length(chrs)),
-  end=rep (250000000, length(chrs))
-)
-```
-
-```{r, echo=F, fig.width = (19/2.4), fig.height=(5.5/2.4), fig.align='center', eval=FALSE}
-plot = ReConPlot( sv_data,
-cn_data,
-chr_selection=chr_selection,
-genes=c("MDM2","MDM4","MYC","CDK4","EGFR","CDKN2A","CCND2"),
-title="Multichromosomal example with gene names showing highly rearranged chromosomes",
-size_gene_label = 2,
-pos_SVtype_description=1000000,
-color_minor_cn="steelblue2",
-scaling_cn_SVs = 1/2,
-size_title = 7,
-size_chr_labels=9,
-legend_SV_types=T,
-scale_separation_SV_type_labels=1/18, 
-max.cn = 4, 
-scale_ticks=20000000)
-
-print(plot)
-```
-
-Finally, an annotation plot can be added below the Recon plot, by providing a dataframe with the columns "chr", "pos" and "y" and the parameter \*custom_annotation\*.
+Finally, an annotation plot can be added below the Recon plot, by providing a dataframe with the columns "chr", "pos" and "y" and the parameter *custom_annotation*.
 Only the points within the *chr_selection* point of view will be displayed.
 "y" can represent a scale of user definition.
 In the example below, we annotate the plot with SNVs where "y" represents the allele frequency.
@@ -337,7 +308,7 @@ Please note the other parameters controlling different visual aspects of the ann
 head(snv_data)
 ```
 
-```{r, echo=F, fig.width = (19/2.4), fig.height=(5.5/2.4), fig.align='center', eval=FALSE}
+```{r, echo=TRUE, fig.width = (19/2.4), fig.height=(8/2.4), fig.align='center', eval=TRUE}
 chrs=c("chr10")
 chr_selection = data.frame(
   chr=chrs,
@@ -352,14 +323,17 @@ legend_SV_types=T,
 pos_SVtype_description=115000000,
 scale_separation_SV_type_labels=1/23,
 title="Example with annotation",
+curvature_intrachr_SVs=-.05,
 custom_annotation=snv_data,
 ann_dot_col="darkred",
-ann_size_dot=.5,
-ann_y_title="SNV-VAF", #Label for y-axis
-ann_rel_size=.4 #Relative size to main plot
+ann_dot_size=.5,
+ann_y_title="SNV-VAF", 
+#Label for y-axis
+ann_rel_size=.4
+#Relative size to main plot
 )
 
-print(plot)
+print(plot + theme(plot.margin=margin(t=1, unit = "cm")))
 ```
 
 The Recon plots are ggplot objects and can be modified after generation as such.
