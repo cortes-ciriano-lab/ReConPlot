@@ -695,7 +695,6 @@ ReConPlot <- function(sv,
   #----------------------------------------------------------------
   if(interFlag){ #(interSV_other_chrs)){
     if (exists("interSV_other_chrs")){
-      print(interSV_other_chrs)
       for(i in 1:nrow(interSV_other_chrs)){
   
         chr1_in = (interSV_other_chrs$chr1[i] %in% chr_selection$chr)
