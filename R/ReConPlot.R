@@ -10,20 +10,19 @@ scaler <- function(k) {
 #-------------------------------------------------
 # load dependencies
 #-------------------------------------------------
-suppressMessages(suppressWarnings(library(ggplot2)))
-suppressMessages(suppressWarnings(library(dplyr)))
-suppressMessages(suppressWarnings(library(tidyr)))
-suppressMessages(suppressWarnings(library(grid)))
-suppressMessages(suppressWarnings(library(gridExtra)))
-suppressMessages(suppressWarnings(library(ggthemes)))
-suppressMessages(suppressWarnings(library(karyoploteR)))
+suppressMessages(suppressWarnings(library(tidyverse)))
+# suppressMessages(suppressWarnings(library(grid)))
+# suppressMessages(suppressWarnings(library(gridExtra)))
+# suppressMessages(suppressWarnings(library(ggthemes)))
 suppressMessages(suppressWarnings(library(cowplot)))
-suppressMessages(suppressWarnings(library(ggplotify)))
+# suppressMessages(suppressWarnings(library(ggplotify)))
 options(scipen=999)
 
 #' Function to plot genomic rearrangements (allele-specific copy number profiles and structural variants)
 #'
 #' This function generates publication-quality plots for copy number and structural variation profiles, which are particularly useful in the context of cancer genome analysis projects.
+#' @import tidyverse
+#' @import cowplot
 #' @param sv Dataframe with SV information. Required, no default value.
 #' @param cnv Dataframe with copy number information. Required, no default value.
 #' @param title Title of the plot. Defaults to "".
@@ -43,50 +42,63 @@ options(scipen=999)
 #' @param colour_h2hINV Colour of the arcs representing head-to-head inversions (h2hINV).
 #' @param colour_DUP Colour of the arcs representing duplications (DUP).
 #' @param colour_t2tINV Colour of the arcs representing tail-to-tail inversions (t2tINV).
-#' @param size_gene_label Size of the gene labels. Defaults to 2.2.
+#' @param size_gene_label Size of the gene labels. Defaults to 1.5.
+#' @param custom_annotation Dataframe with custom annotation. Must contain columns "chr", "pos" and "y". Defaults to NULL.
+#' @param ann_dot_col Colour of the dots in annotation plot. Defaults to "0.5."black".
+#' @param ann_dot_size Size of the dots in annotation plot. Defaults to 0.5.
+#' @param ann_y_title Label for Y-axis in annotation plot. Defaults to "".
+#' @param ann_rel_size Size of the annotation plot, relative to the main plot. Defaults to 0.4.
 #' @param color_minor_cn Colour for the horizontal bars representing the minor copy number values.
 #' @param curvature_intrachr_SVs Curvature for the arcs represeting intrachromosomal SVs. Defaults to -0.15
 #' @param curvature_interchr_SVs Curvature for the arcs represeting interchromosomal SVs. Defaults to -0.08
 #' @param max.cn Cap on the total copy number (for the minor we do not need as the minor will never be very high). Defaults to 10.
-#' @param npc_now
-#' @param genome_version Reference genome used. Can be either hg19, hg38 or T2T (for T2T-CHM13v1.1).
+#' @param npc_now Controls spacing, needed to find SV partners on different chromosomes in the plot. Not recommended to change. Defaults to .00625 * 3.
+#' @param genome_version Reference genome used. Can be either hg19, hg38, T2T, mm10 or mm39.
 #' @param scale_ticks Spacing of breaks in the x axis (in bp). Defaults to 20000000 (i.e., 20Mb).
 #' @param xscale Scale for the x axis. Defaults to 10*10^6 to put the x axis in Mbp.
 #' @param size_interchr_SV_tip Size of the line indicating interchromosomal SVs involving chromosomes not shown (that is, not included in chr_selection).
+#' @param label_interchr_SV Flag to annotate the second chromosome of interchromosomal SVs involving chromosomes not shown. Defaults to FALSE.
+#' @param size_sv_line Linewidth for SVs. Defaults to .1 .
 #' @examples Please the tutorial of the package.
 #' @export
 
 ReConPlot <- function(sv,
-                        cnv,
-                        title="",
-                        genes=NULL,
-                        chr_selection = NULL,
-                        scaling_cn_SVs = 1/5,
-                        scale_separation_SV_type_labels = 1/22,
-                        pos_SVtype_description = 5000000,
-                        window = 10000000 ,
-                        xscale = 10*10^6,
-                        percentage_increase_y_axis=0.10, #05,
-                        legend_SV_types=TRUE,
-                        size_chr_labels=7,
-                        size_title=7,
-                        size_text=5,
-						            lower_limit_karyotype=-0.7,
-					              upper_limit_karyotype=-0.2,
-                        colour_band2= "antiquewhite1", colour_band1="grey86",
-                        colour_DEL = "orange", colour_h2hINV="forestgreen", 
-					              colour_DUP="darkblue", colour_t2tINV="black",
-					              colour_TRA="darkgray",
-                        size_gene_label=1.5,
-                        color_minor_cn="#8491B4B2",
-                        curvature_intrachr_SVs=-0.15,
-                        curvature_interchr_SVs=-0.08, 
-						            max.cn=8,
-                        npc_now=.00625 * 3,
-                        scale_ticks=20000000,
-						            size_interchr_SV_tip = 0.2,
-						            size_sv_line=0.1,
-					              genome_version="hg38"
+                      cnv,
+                      title="",
+                      genes=NULL,
+                      chr_selection = NULL,
+                      scaling_cn_SVs = 1/5,
+                      scale_separation_SV_type_labels = 1/22,
+                      pos_SVtype_description = 5000000,
+                      window = 10000000 ,
+                      xscale = 10*10^6,
+                      percentage_increase_y_axis=0.10, #05,
+                      legend_SV_types=TRUE,
+                      size_chr_labels=7,
+                      size_title=7,
+                      size_text=5,
+					            lower_limit_karyotype=-0.7,
+				              upper_limit_karyotype=-0.2,
+                      colour_band2= "antiquewhite1", colour_band1="grey86",
+                      colour_DEL = "orange", colour_h2hINV="forestgreen", 
+				              colour_DUP="darkblue", colour_t2tINV="black",
+				              colour_TRA="darkgray",
+                      size_gene_label=1.5,
+					            custom_annotation=NULL,
+					            ann_dot_col="black",
+					            ann_dot_size=.5,
+					            ann_y_title="",
+					            ann_rel_size=.4, 
+                      color_minor_cn="#8491B4B2",
+                      curvature_intrachr_SVs=-0.15,
+                      curvature_interchr_SVs=-0.08, 
+					            max.cn=8,
+                      npc_now=.00625 * 3,
+                      scale_ticks=20000000,
+					            size_interchr_SV_tip = 0.2,
+					            label_interchr_SV=FALSE,
+					            size_sv_line=0.1,
+				              genome_version="hg38"
                         ){
 
   #----------------------------------------------------------------
@@ -112,10 +124,14 @@ ReConPlot <- function(sv,
   if(is.data.frame(cnv) == FALSE){stop("Error: the copy number data must be input in dataframe format")}
   if(is.data.frame(sv) == FALSE){stop("Error: the SV data must be input in dataframe format")}
   
-#   if(sum(sv$strands %in% c("++","+-","-+","--")) > 0){
-# 	  stop("The SV strands need to be one of the following: ++, +-, -+ or --. Values different than these are present in the input SV data" )
-#   }
-
+  #Check custom annotation dataframe if exists#
+  if (! is.null(custom_annotation)){
+    required_custom_columns=c("chr", "pos", "y")
+    if (sum (! (required_custom_columns %in% names(custom_annotation)) ) > 0 ){
+      stop("Error: the input Custom annotation dataframe is missing required columns. The required columns are: chr, pos, y")
+    }
+  }
+  
   idx = which(sv$pos1 == sv$pos2)
   if(length(idx)>0){sv$pos2[idx] = sv$pos2[idx]+1}
 
@@ -131,7 +147,7 @@ ReConPlot <- function(sv,
       karyotype_data_annot=karyotype_data_now}
     else{
       karyotype_data_annot=karyotype_data_now[seq(3,(nrow(karyotype_data_now)-3),3),]}
-    karyotype_data_now$chr = factor(karyotype_data_now$chr, levels=chr_selection$chr)}
+    karyotype_data_now$chr = factor(karyotype_data_now$chr, levels=unique(chr_selection$chr))}
   else if (genome_version == "hg19") {
     karyotype_data_now = karyotype_data_hg19[karyotype_data_hg19$chr %in% chr_selection$chr,]
     karyotype_data_now$y = rep(1,nrow(karyotype_data_now))
@@ -139,7 +155,7 @@ ReConPlot <- function(sv,
       karyotype_data_annot=karyotype_data_now}
     else{
       karyotype_data_annot=karyotype_data_now[seq(3,(nrow(karyotype_data_now)-3),3),]}
-    karyotype_data_now$chr = factor(karyotype_data_now$chr, levels=chr_selection$chr)}
+    karyotype_data_now$chr = factor(karyotype_data_now$chr, levels=unique(chr_selection$chr))}
   else if (genome_version == "T2T") {
     karyotype_data_now = karyotype_data_T2T[karyotype_data_T2T$chr %in% chr_selection$chr,]
     karyotype_data_now$y = rep(1,nrow(karyotype_data_now))
@@ -147,7 +163,23 @@ ReConPlot <- function(sv,
       karyotype_data_annot=karyotype_data_now}
     else{
       karyotype_data_annot=karyotype_data_now[seq(3,(nrow(karyotype_data_now)-3),3),]}
-    karyotype_data_now$chr = factor(karyotype_data_now$chr, levels=chr_selection$chr)}
+    karyotype_data_now$chr = factor(karyotype_data_now$chr, levels=unique(chr_selection$chr))}
+  else if (genome_version == "mm10") {
+    karyotype_data_now = karyotype_data_mm10[karyotype_data_mm10$chr %in% chr_selection$chr,]
+    karyotype_data_now$y = rep(1,nrow(karyotype_data_now))
+    if (nrow(karyotype_data_now)<7){
+      karyotype_data_annot=karyotype_data_now}
+    else{
+      karyotype_data_annot=karyotype_data_now[seq(3,(nrow(karyotype_data_now)-3),3),]}
+    karyotype_data_now$chr = factor(karyotype_data_now$chr, levels=unique(chr_selection$chr))}
+  else if (genome_version == "mm39") {
+    karyotype_data_now = karyotype_data_mm39[karyotype_data_mm39$chr %in% chr_selection$chr,]
+    karyotype_data_now$y = rep(1,nrow(karyotype_data_now))
+    if (nrow(karyotype_data_now)<7){
+      karyotype_data_annot=karyotype_data_now}
+    else{
+      karyotype_data_annot=karyotype_data_now[seq(3,(nrow(karyotype_data_now)-3),3),]}
+    karyotype_data_now$chr = factor(karyotype_data_now$chr, levels=unique(chr_selection$chr))}
   else {stop("Genome version not recognized")}
   
 
@@ -346,7 +378,7 @@ ReConPlot <- function(sv,
   rectangle = data.frame(xmin=0,xmax=NA,
                           ymin=seq1,
                           ymax=seq2,
-                          chr=factor(rep(chr_selection$chr,length(seq1)/length(chr_selection$chr)),levels=chr_selection$chr))
+                          chr=factor(rep(chr_selection$chr,length(seq1)/length(chr_selection$chr)),levels=unique(chr_selection$chr)))
   # ## plot background
   p = p + geom_rect(aes(xmin = -Inf, xmax = Inf, ymin = ymin, ymax = ymax, group=chr),
                     alpha = .5, fill = colour_band1,
@@ -397,7 +429,7 @@ ReConPlot <- function(sv,
     geom_segment(aes(x = start, y = copyNumber, xend = end,
                      yend = copyNumber,  group=chr), # ICC group
                  data = cnv.plot[cnv.plot$chr %in% chr_selection$chr,], colour="black",size=1) +
-    facet_grid( . ~ factor(chr, levels = chr_selection$chr), # not converting to factor to make the labeller work
+    facet_grid( . ~ factor(chr, levels = unique(chr_selection$chr)), # not converting to factor to make the labeller work
                 scales = "free_x", space = "free_x", switch = "x", #) +
                 # #Add different labels?
                  labeller = as_labeller(chromosome_labeller)) + #(chr=chr_selection$chr) ) +
@@ -414,6 +446,7 @@ ReConPlot <- function(sv,
       panel.background = element_blank(),
       strip.background = element_blank(),
       strip.placement = "outside",
+      strip.clip = "off",
       plot.margin = unit(c(.25, .1, -0.1, .1), "cm"),
       panel.grid.major.x = element_blank(),
       #panel.spacing = unit(4, "lines"), ICC
@@ -429,7 +462,8 @@ ReConPlot <- function(sv,
     #ylim(c(0,max_y),expand) +
     scale_y_continuous(limits = c(lower_limit_karyotype - 0.05,max_y_svs_3+0.5),  breaks=breaks_y, expand = 1,
                        labels=c(breaks_y[1:length(breaks_y)-1], paste0(">=",breaks_y[length(breaks_y)]))) + #seq(0,max_y,2)) +
-    scale_x_continuous(labels=formatter1000,
+    scale_x_continuous(expand=c(0,0),
+                       labels=formatter1000,
                        breaks=scaler(scale_ticks))
   
   # add lines where the SVs go
@@ -448,7 +482,6 @@ ReConPlot <- function(sv,
         # get the maximum coordinates for the chr at hand
         max_coord = max(cnv.plot[cnv.plot$chr==intraSV$chr1[i],"end"])
         min_coord = min(cnv.plot[cnv.plot$chr==intraSV$chr1[i],"start"])
-
         # add max
         intraSV$max_y_sv = max_y_svs_2
         intraSV$max_y_sv[which(intraSV$strands %in% c("DEL","DUP","+-", "-+"))] = max_y_svs_1
@@ -457,7 +490,6 @@ ReConPlot <- function(sv,
 
         # if one breakpoint outside or range, just plot a vertical line, if not the entire arc
         if (intraSV$pos1[i] >= min_coord &  intraSV$pos2[i] <= max_coord ){ # within range
-
           p = p +
             # arc
             geom_curve(data = data.frame(cov = 1, chr = intraSV$chr1[i]),
@@ -477,18 +509,24 @@ ReConPlot <- function(sv,
       
         # cases now with left size in range
         if (intraSV$pos1[i] >= min_coord & intraSV$pos1[i] < max_coord  &  intraSV$pos2[i] > max_coord){ # within range
-
           p = p +
             geom_curve(data = data.frame(cov = 1, chr = intraSV$chr1[i]),
                        x=intraSV$pos1[i], xend=intraSV$pos1[i],
                        y=0, yend=max_y_svs_3-0.15, curvature=0,  size=size_sv_line, colour=intraSV$colour[i])
           # add diagonal line on top
-  		  x_range = (chr_selection$end[which(chr_selection$chr==intraSV$chr1[i])] - chr_selection$start[which(chr_selection$chr==intraSV$chr1[i])]) * 0.01
+          x_range_end = chr_selection %>% filter(chr == intraSV$chr1[i]) %>% filter(intraSV$pos1[i]>=start & intraSV$pos1[i] <= end) %>% filter(row_number()==1) %>% pull(end)
+          x_range_start = chr_selection %>% filter(chr == intraSV$chr1[i]) %>% filter(intraSV$pos1[i]>=start & intraSV$pos1[i] <= end) %>% filter(row_number()==1) %>% pull(start)
+          x_range=(x_range_end-x_range_start)*0.01
           p = p +
             geom_curve(data = data.frame(cov = 1, chr = intraSV$chr1[i]),
                        x=intraSV$pos1[i], xend=intraSV$pos1[i]+x_range, #2000000,
                        y=max_y_svs_3-size_interchr_SV_tip, yend= max_y_svs_3, angle=45, curvature=0,  size=size_sv_line, colour=intraSV$colour[i])
-
+          if (label_interchr_SV) {
+            p = p + geom_text(data = data.frame(cov = 1, chr = intraSV$chr1[i]),
+                              x=intraSV$pos1[i]-x_range, #2000000,
+                              y=max_y_svs_3+size_interchr_SV_tip, size=size_text/.pt, colour=intraSV$colour[i],
+                              label=intraSV$chr2[i])
+          }
         }
 
         # `    # cases now with right size in range
@@ -498,11 +536,19 @@ ReConPlot <- function(sv,
                        x=intraSV$pos2[i], xend=intraSV$pos2[i],
                        y=0, yend=max_y_svs_3-0.15, curvature=0,  size=size_sv_line, colour=intraSV$colour[i])
           # add diagonal line on top
-  		  x_range = (chr_selection$end[which(chr_selection$chr==intraSV$chr1[i])] - chr_selection$start[which(chr_selection$chr==intraSV$chr1[i])]) * 0.01
+          x_range_end = chr_selection %>% filter(chr == intraSV$chr2[i]) %>% filter(intraSV$pos2[i]>=start & intraSV$pos2[i] <= end) %>% filter(row_number()==1) %>% pull(end)
+          x_range_start = chr_selection %>% filter(chr == intraSV$chr2[i]) %>% filter(intraSV$pos2[i]>=start & intraSV$pos2[i] <= end) %>% filter(row_number()==1) %>% pull(start)
+          x_range=(x_range_end-x_range_start)*0.01
           p = p +
-            geom_curve(data = data.frame(cov = 1, chr = intraSV$chr1[i]),
+            geom_curve(data = data.frame(cov = 1, chr = intraSV$chr2[i]),
                        x=intraSV$pos2[i], xend=intraSV$pos2[i]-x_range, #2000000,
                        y=max_y_svs_3-size_interchr_SV_tip, yend=max_y_svs_3 , angle=45, curvature=0,  size=size_sv_line, colour=intraSV$colour[i])
+          if (label_interchr_SV) {
+            p = p + geom_text(data = data.frame(cov = 1, chr = intraSV$chr2[i]),
+                              x=intraSV$pos2[i]-x_range, #2000000,
+                              y=max_y_svs_3+size_interchr_SV_tip, size=size_text/.pt, colour=intraSV$colour[i],
+                              label=intraSV$chr1[i])
+          }
         }
       }
     }
@@ -603,11 +649,19 @@ ReConPlot <- function(sv,
                        x=interSV$pos2[i], xend=interSV$pos2[i],
                        y=0, yend=max_y_svs_3-size_interchr_SV_tip, curvature=0,  size=size_sv_line, colour=interSV$colour[i])
           # add diagonal line on top
-		  x_range = (chr_selection$end[which(chr_selection$chr==interSV$chr1[i])] - chr_selection$start[which(chr_selection$chr==interSV$chr1[i])]) * 0.01
+          x_range_end = chr_selection %>% filter(chr == interSV$chr2[i]) %>% filter(interSV$pos2[i]>=start & interSV$pos2[i] <= end) %>% filter(row_number()==1) %>% pull(end)
+          x_range_start = chr_selection %>% filter(chr == interSV$chr2[i]) %>% filter(interSV$pos2[i]>=start & interSV$pos2[i] <= end) %>% filter(row_number()==1) %>% pull(start)
+          x_range=(x_range_end-x_range_start)*0.01
           p = p +
             geom_curve(data = data.frame(cov = 1, chr = interSV$chr2[i]),
                        x=interSV$pos2[i], xend=interSV$pos2[i]-x_range, #2000000,
                        y=max_y_svs_3-size_interchr_SV_tip, yend=max_y_svs_3 , angle=45, curvature=0,  size=size_sv_line, colour=interSV$colour[i])
+          if (label_interchr_SV) {
+            p = p + geom_text(data = data.frame(cov = 1, chr = interSV$chr2[i]),
+                              x=interSV$pos2[i]-x_range, #2000000,
+                              y=max_y_svs_3+size_interchr_SV_tip, size=size_text/.pt, colour=interSV$colour[i],
+                              label=interSV$chr1[i])
+          }
         }
 
         # the rightmost breakpoint is outside of the range
@@ -618,11 +672,19 @@ ReConPlot <- function(sv,
                        x=interSV$pos1[i], xend=interSV$pos1[i],
                        y=0, yend=max_y_svs_3-size_interchr_SV_tip, curvature=0,  size=size_sv_line, colour=interSV$colour[i])
           # add diagonal line on top
-		  x_range = (chr_selection$end[which(chr_selection$chr==interSV$chr1[i])] - chr_selection$start[which(chr_selection$chr==interSV$chr1[i])]) * 0.01
+          x_range_end = chr_selection %>% filter(chr == interSV$chr1[i]) %>% filter(interSV$pos1[i]>=start & interSV$pos1[i] <= end) %>% filter(row_number()==1) %>% pull(end)
+          x_range_start = chr_selection %>% filter(chr == interSV$chr1[i]) %>% filter(interSV$pos1[i]>=start & interSV$pos1[i] <= end) %>% filter(row_number()==1) %>% pull(start)
+          x_range=(x_range_end-x_range_start)*0.01
           p = p +
             geom_curve(data = data.frame(cov = 1, chr = interSV$chr1[i]),
                        x=interSV$pos1[i], xend=interSV$pos1[i]-x_range, #2000000,
                        y=max_y_svs_3-size_interchr_SV_tip, yend=max_y_svs_3 , angle=45, curvature=0,  size=size_sv_line, colour=interSV$colour[i])
+          if (label_interchr_SV) {
+            p = p + geom_text(data = data.frame(cov = 1, chr = interSV$chr1[i]),
+                              x=interSV$pos1[i]-x_range, #2000000,
+                              y=max_y_svs_3+size_interchr_SV_tip, size=size_text/.pt, colour=interSV$colour[i], 
+                              label=interSV$chr2[i])
+          }
         }
       }
     }
@@ -633,6 +695,7 @@ ReConPlot <- function(sv,
   #----------------------------------------------------------------
   if(interFlag){ #(interSV_other_chrs)){
     if (exists("interSV_other_chrs")){
+      print(interSV_other_chrs)
       for(i in 1:nrow(interSV_other_chrs)){
   
         chr1_in = (interSV_other_chrs$chr1[i] %in% chr_selection$chr)
@@ -650,18 +713,25 @@ ReConPlot <- function(sv,
                          x=interSV_other_chrs$pos2[i], xend=interSV_other_chrs$pos2[i],
                          y=0, yend=max_y_svs_3-0.2, curvature=0,  size=size_sv_line, colour=interSV_other_chrs$colour[i])
             # add diagonal line on top
-  		  x_range = (chr_selection$end[which(chr_selection$chr==interSV_other_chrs$chr2[i])] - chr_selection$start[which(chr_selection$chr==interSV_other_chrs$chr2[i])]) * 0.01
+            x_range_end = chr_selection %>% filter(chr == interSV_other_chrs$chr2[i]) %>% filter(interSV_other_chrs$pos2[i]>=start & interSV_other_chrs$pos2[i] <= end) %>% filter(row_number()==1) %>% pull(end)
+            x_range_start = chr_selection %>% filter(chr == interSV_other_chrs$chr2[i]) %>% filter(interSV_other_chrs$pos2[i]>=start & interSV_other_chrs$pos2[i] <= end) %>% filter(row_number()==1) %>% pull(start)
+            x_range=(x_range_end-x_range_start)*0.01
             p = p +
               geom_curve(data = data.frame(cov = 1, chr = interSV_other_chrs$chr2[i]),
                          x=interSV_other_chrs$pos2[i], xend=interSV_other_chrs$pos2[i]-x_range, #2000000,
                          y=max_y_svs_3-size_interchr_SV_tip, yend=max_y_svs_3 , angle=45, curvature=0,  size=size_sv_line, colour=interSV_other_chrs$colour[i])
+          if (label_interchr_SV) {
+              p = p + geom_text(data = data.frame(cov = 1, chr = interSV_other_chrs$chr2[i]),
+                                x=interSV_other_chrs$pos2[i]-x_range, #2000000,
+                                y=max_y_svs_3+size_interchr_SV_tip, size=size_text/.pt, colour=interSV_other_chrs$colour[i],
+                                label=interSV_other_chrs$chr1[i])
+            }
           }
         }
   
         # the rightmost breakpoint is outside of the range
         chr2_in = (interSV_other_chrs$chr2[i] %in% chr_selection$chr)
-  
-  
+
         if( (!chr2_in)){
           # check that both breakpoints map to the copy number interval in the plot for chr1
           min_pos_chr1 =  min(cnv.plot[cnv.plot$chr==interSV_other_chrs$chr1[i],"start"])
@@ -674,11 +744,19 @@ ReConPlot <- function(sv,
                          x=interSV_other_chrs$pos1[i], xend=interSV_other_chrs$pos1[i],
                          y=0, yend=max_y_svs_3-0.2, curvature=0,  size=size_sv_line, colour=interSV_other_chrs$colour[i])
             # add diagonal line on top
-  		  x_range = (chr_selection$end[which(chr_selection$chr==interSV_other_chrs$chr1[i])] - chr_selection$start[which(chr_selection$chr==interSV_other_chrs$chr1[i])]) * 0.01
+    		    x_range_end = chr_selection %>% filter(chr == interSV_other_chrs$chr1[i]) %>% filter(interSV_other_chrs$pos1[i]>=start & interSV_other_chrs$pos1[i] <= end) %>% filter(row_number()==1) %>% pull(end)
+    		    x_range_start = chr_selection %>% filter(chr == interSV_other_chrs$chr1[i]) %>% filter(interSV_other_chrs$pos1[i]>=start & interSV_other_chrs$pos1[i] <= end) %>% filter(row_number()==1) %>% pull(start)
+    		    x_range=(x_range_end-x_range_start)*0.01
             p = p +
               geom_curve(data = data.frame(cov = 1, chr = interSV_other_chrs$chr1[i]),
                          x=interSV_other_chrs$pos1[i], xend=interSV_other_chrs$pos1[i]-x_range, #2000000,
                          y=max_y_svs_3-size_interchr_SV_tip, yend=max_y_svs_3 , angle=45, curvature=0,  size=size_sv_line, colour=interSV_other_chrs$colour[i])
+            if (label_interchr_SV) {
+              p = p + geom_text(data = data.frame(cov = 1, chr = interSV_other_chrs$chr1[i]),
+                                x=interSV_other_chrs$pos1[i]-x_range, #2000000,
+                                y=max_y_svs_3+size_interchr_SV_tip, size=size_text/.pt, colour=interSV_other_chrs$colour[i], 
+                                label=interSV_other_chrs$chr2[i])
+            }
           }
         }
       }
@@ -698,6 +776,12 @@ ReConPlot <- function(sv,
       }
       else if (genome_version == "T2T") {
         gene_coord_now = gene_coord_T2T[gene_coord_T2T$gene==gene,]
+      }
+      else if (genome_version == "mm10") {
+        gene_coord_now = gene_coord_mm10[gene_coord_mm10$gene==gene,]
+      }
+      else if (genome_version == "mm39") {
+        gene_coord_now = gene_coord_mm39[gene_coord_mm39$gene==gene,]
       }
       else {stop("Genome version not recognized")}
       #Some genes are not in the annotation list -> skip
@@ -768,5 +852,88 @@ ReConPlot <- function(sv,
   # to remove vertical white lines:
   p = p + theme(panel.grid.minor = element_line(colour = NA))
 
-  return(p)
+  
+  #SNV PLOTTING#
+  
+  if (! is.null(custom_annotation)){
+    # get the maximum coordinates for the chr at hand
+    chr.coords <- cnv.plot %>% 
+      group_by(chr) %>% 
+      summarise(start = min(start),
+                end = max(end)) %>% 
+      ungroup()
+    custom_annotation$selected = apply(custom_annotation, 1, function(row){
+      sel = FALSE
+      chr_i = row["chr"]
+      pos_i = row["pos"]
+      if (chr_i %in% cnv.plot$chr){
+        max_coord = chr.coords %>% filter(chr == chr_i) %>% pull(end)
+        min_coord = chr.coords %>% filter(chr == chr_i) %>% pull(start)
+        if (dplyr::between(as.numeric(pos_i),min_coord, max_coord)){
+          sel=TRUE
+        }
+      }
+      return(sel)
+    })
+    custom_annotation_selected <- custom_annotation %>% filter(selected)
+    if (nrow(custom_annotation_selected) > 0){
+
+      #Add anchor to have same plot area
+      anchor.df <- data.frame()
+      for (chr_i in unique(chr.coords$chr)){
+        max_coord = chr.coords %>% filter(chr == chr_i) %>% pull(end)
+        min_coord = chr.coords %>% filter(chr == chr_i) %>% pull(start)
+        row.min = c("chr"=chr_i, "pos"=min_coord, "y"=0)
+        row.max = c("chr"=chr_i, "pos"=max_coord, "y"=0)
+        rows=bind_rows(row.min,row.max)
+        anchor.df <- bind_rows(anchor.df, rows)
+      }
+      custom_annotation_selected <- custom_annotation_selected %>% 
+        mutate(y = as.numeric(y),
+               pos = as.numeric(pos))
+      anchor.df <- anchor.df %>% 
+        mutate(y = as.numeric(y),
+               pos = as.numeric(pos))
+    
+      ann.plot <- ggplot(custom_annotation_selected, aes(x=pos, y=y)) +
+        geom_point(col=ann_dot_col, size=ann_dot_size) +
+        geom_point(data=anchor.df, col=NA, na.rm=T) +
+        facet_grid(. ~ factor(chr, levels = unique(chr_selection$chr)), space="free_x", scales="free_x") +
+        theme_classic() +
+        scale_x_continuous(expand=c(0,0)) +
+        ylab(ann_y_title) +
+        # scale_fill_manual(limits=c("true","suspect", "false"), values=c("black", "gray47", "gray76")) +
+        theme(
+          text=element_text(size=size_text, colour="black"), #, face ="bold"),
+          axis.text.x= element_blank(),
+          axis.ticks.x= element_blank(),
+          axis.title.x = element_blank(),
+          axis.title.y = element_text(size=size_text, colour="black"),
+          axis.text.y=element_text(size=size_text, colour="black"),
+          axis.line =  element_line(colour = "black", size=.25),
+          panel.background = element_blank(),
+          panel.border = element_rect(colour = "black", fill=NA, size=.25),
+          panel.grid.major.y=element_line( size=.01, color="gray"),
+          strip.background = element_blank(),
+          strip.placement = "outside",
+          plot.margin = unit(c(0, 0, 0, 0), "cm"),
+          panel.spacing.x = unit(.00625 * 3, "npc"),
+          strip.text.x = element_blank(), ## to remove the title of the facet panels
+          plot.title = element_blank(),
+          legend.position = "none"
+        )
+    }
+  }
+  if (exists("ann.plot")){
+    merged.p <- plot_grid(p, ann.plot, 
+                          align = "hv", axis="trbl",
+                          ncol=1, rel_heights = c(1, ann_rel_size))
+  } else {
+    merged.p <- p
+  }
+  return(merged.p)
 }
+
+
+
+

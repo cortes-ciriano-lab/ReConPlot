@@ -10,5 +10,7 @@ Description: ReConPlot provides functionalities to depict copy number and struct
 License: free for academic use only. If you are not a member of a public funded academic and/or education and/or research institution you must obtain a commercial license from EMBL Enterprise Management GmbH (EMBLEM); please email EMBLEM (info@embl-em.de).
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.1.2.9000
-Depensds: R (>= 4.1.0),ggplot2,dplyr,tidyr,grid,gridExtra,ggthemes,karyoploteR,cowplot,ggplotify
+RoxygenNote: 7.2.3
+Imports:
+    tidyverse,
+    cowplot

@@ -30,13 +30,20 @@ ReConPlot(
   colour_t2tINV = "black",
   colour_TRA = "darkgray",
   size_gene_label = 1.5,
+  custom_annotation = NULL,
+  ann_dot_col = "black",
+  ann_dot_size = 0.5,
+  ann_y_title = "",
+  ann_rel_size = 0.4,
   color_minor_cn = "#8491B4B2",
   curvature_intrachr_SVs = -0.15,
   curvature_interchr_SVs = -0.08,
-  max.cnv = 8,
+  max.cn = 8,
   npc_now = 0.00625 * 3,
   scale_ticks = 20000000,
   size_interchr_SV_tip = 0.2,
+  label_interchr_SV = FALSE,
+  size_sv_line = 0.1,
   genome_version = "hg38"
 )
 }
@@ -81,7 +88,17 @@ ReConPlot(
 
 \item{colour_t2tINV}{Colour of the arcs representing tail-to-tail inversions (t2tINV).}
 
-\item{size_gene_label}{Size of the gene labels. Defaults to 2.2.}
+\item{size_gene_label}{Size of the gene labels. Defaults to 1.5.}
+
+\item{custom_annotation}{Dataframe with custom annotation. Must contain columns "chr", "pos" and "y". Defaults to NULL.}
+
+\item{ann_dot_col}{Colour of the dots in annotation plot. Defaults to "0.5."black".}
+
+\item{ann_dot_size}{Size of the dots in annotation plot. Defaults to 0.5.}
+
+\item{ann_y_title}{Label for Y-axis in annotation plot. Defaults to "".}
+
+\item{ann_rel_size}{Size of the annotation plot, relative to the main plot. Defaults to 0.4.}
 
 \item{color_minor_cn}{Colour for the horizontal bars representing the minor copy number values.}
 
@@ -89,13 +106,19 @@ ReConPlot(
 
 \item{curvature_interchr_SVs}{Curvature for the arcs represeting interchromosomal SVs. Defaults to -0.08}
 
-\item{max.cnv}{Cap on the total copy number (for the minor we do not need as the minor will never be very high). Defaults to 10.}
+\item{max.cn}{Cap on the total copy number (for the minor we do not need as the minor will never be very high). Defaults to 10.}
+
+\item{npc_now}{Controls spacing, needed to find SV partners on different chromosomes in the plot. Not recommended to change. Defaults to .00625 * 3.}
 
 \item{scale_ticks}{Spacing of breaks in the x axis (in bp). Defaults to 20000000 (i.e., 20Mb).}
 
 \item{size_interchr_SV_tip}{Size of the line indicating interchromosomal SVs involving chromosomes not shown (that is, not included in chr_selection).}
 
-\item{genome_version}{Reference genome used. Can be either hg19, hg38 or T2T (for T2T-CHM13v1.1).}
+\item{label_interchr_SV}{Flag to annotate the second chromosome of interchromosomal SVs involving chromosomes not shown. Defaults to FALSE.}
+
+\item{size_sv_line}{Linewidth for SVs. Defaults to .1 .}
+
+\item{genome_version}{Reference genome used. Can be either hg19, hg38, T2T, mm10 or mm39.}
 }
 \description{
 This function generates publication-quality plots for copy number and structural variation profiles, which are particularly useful in the context of cancer genome analysis projects.
