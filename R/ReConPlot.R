@@ -11,15 +11,77 @@ scaler <- function(k) {
 #-------------------------------------------------
 # load dependencies
 #-------------------------------------------------
-suppressMessages(suppressWarnings(library(tidyverse)))
+suppressMessages(suppressWarnings(library(dplyr)))
+suppressMessages(suppressWarnings(library(ggplot2)))
 suppressMessages(suppressWarnings(library(cowplot)))
 suppressMessages(suppressWarnings(library(scales)))
 options(scipen=999)
 
+
+
+#' Test structural variation data
+#'
+#' A dataset containing an example data frame with 
+#' 538 SVs. The variables are as follows:
+#'
+#' \itemize{
+#'   \item chr1. Chromosome 1 of the SV
+#'   \item pos1. Position 1 of the SV
+#'   \item chr2. Chromosome 2 of the SV
+#'   \item pos2. Position 2 of the SV
+#'   \item strands. Orientation of the SV (++, --, +- or -+)
+#' }
+#'
+#' @docType data
+#' @keywords datasets
+#' @name sv_data
+#' @usage data(sv_data)
+#' @format A data frame with 538 rows and 5 variables
+NULL
+
+#' Test copy number data
+#'
+#' A dataset containing an example data frame with 
+#' 2223 CN segments. The variables are as follows:
+#'
+#' \itemize{
+#'   \item chr. Chromosome 
+#'   \item start. Start
+#'   \item end. End 
+#'   \item copyNumber. Total copy number
+#'   \item minorAlleleCopyNumber.  Minor allele copy number
+#' }
+#'
+#' @docType data
+#' @keywords datasets
+#' @name cn_data
+#' @usage data(cn_data)
+#' @format A data frame with 2223 rows and 5 variables
+NULL
+
+#' Test single nucleotide variation data
+#'
+#' A dataset containing an example data frame with 
+#' 100 SNVs to test the custom_annotation module. The variables are as follows:
+#'
+#' \itemize{
+#'   \item chr. Chromosome 
+#'   \item pos. Position
+#'   \item y. Y coordinate (in this case, variant allele frequency) 
+#' }
+#'
+#' @docType data
+#' @keywords datasets
+#' @name snv_data
+#' @usage data(snv_data)
+#' @format A data frame with 100 rows and 3 variables
+NULL
+
+
 #' Function to plot genomic rearrangements (allele-specific copy number profiles and structural variants)
 #'
 #' This function generates publication-quality plots for copy number and structural variation profiles, which are particularly useful in the context of cancer genome analysis projects.
-#' @import tidyverse
+#' @import ggplot2
 #' @import cowplot
 #' @import dplyr
 #' @import scales
@@ -521,8 +583,8 @@ ReConPlot <- function(sv,
                        x=intraSV$pos1[i], xend=intraSV$pos1[i],
                        y=0, yend=max_y_svs_3-0.15, curvature=0,  size=size_sv_line, colour=intraSV$colour[i])
           # add diagonal line on top
-          x_range_end = chr_selection %>% filter(chr == intraSV$chr1[i]) %>% filter(intraSV$pos1[i]>=start & intraSV$pos1[i] <= end) %>% filter(row_number()==1) %>% pull(end)
-          x_range_start = chr_selection %>% filter(chr == intraSV$chr1[i]) %>% filter(intraSV$pos1[i]>=start & intraSV$pos1[i] <= end) %>% filter(row_number()==1) %>% pull(start)
+          x_range_end = chr_selection %>% filter(.data$chr == intraSV$chr1[i]) %>% filter(intraSV$pos1[i]>=.data$start & intraSV$pos1[i] <= .data$end) %>% filter(row_number()==1) %>% pull(.data$end)
+          x_range_start = chr_selection %>% filter(.data$chr == intraSV$chr1[i]) %>% filter(intraSV$pos1[i]>=.data$start & intraSV$pos1[i] <= .data$end) %>% filter(row_number()==1) %>% pull(.data$start)
           x_range=(x_range_end-x_range_start)*0.01
           p = p +
             geom_curve(data = data.frame(cov = 1, chr = intraSV$chr1[i]),
@@ -543,8 +605,8 @@ ReConPlot <- function(sv,
                        x=intraSV$pos2[i], xend=intraSV$pos2[i],
                        y=0, yend=max_y_svs_3-0.15, curvature=0,  size=size_sv_line, colour=intraSV$colour[i])
           # add diagonal line on top
-          x_range_end = chr_selection %>% filter(chr == intraSV$chr2[i]) %>% filter(intraSV$pos2[i]>=start & intraSV$pos2[i] <= end) %>% filter(row_number()==1) %>% pull(end)
-          x_range_start = chr_selection %>% filter(chr == intraSV$chr2[i]) %>% filter(intraSV$pos2[i]>=start & intraSV$pos2[i] <= end) %>% filter(row_number()==1) %>% pull(start)
+          x_range_end = chr_selection %>% filter(.data$chr == intraSV$chr2[i]) %>% filter(intraSV$pos2[i]>=.data$start & intraSV$pos2[i] <= .data$end) %>% filter(row_number()==1) %>% pull(.data$end)
+          x_range_start = chr_selection %>% filter(.data$chr == intraSV$chr2[i]) %>% filter(intraSV$pos2[i]>=.data$start & intraSV$pos2[i] <= .data$end) %>% filter(row_number()==1) %>% pull(.data$start)
           x_range=(x_range_end-x_range_start)*0.01
           p = p +
             geom_curve(data = data.frame(cov = 1, chr = intraSV$chr2[i]),
@@ -656,8 +718,8 @@ ReConPlot <- function(sv,
                        x=interSV$pos2[i], xend=interSV$pos2[i],
                        y=0, yend=max_y_svs_3-size_interchr_SV_tip, curvature=0,  size=size_sv_line, colour=interSV$colour[i])
           # add diagonal line on top
-          x_range_end = chr_selection %>% filter(chr == interSV$chr2[i]) %>% filter(interSV$pos2[i]>=start & interSV$pos2[i] <= end) %>% filter(row_number()==1) %>% pull(end)
-          x_range_start = chr_selection %>% filter(chr == interSV$chr2[i]) %>% filter(interSV$pos2[i]>=start & interSV$pos2[i] <= end) %>% filter(row_number()==1) %>% pull(start)
+          x_range_end = chr_selection %>% filter(.data$chr == interSV$chr2[i]) %>% filter(interSV$pos2[i]>=.data$start & interSV$pos2[i] <= .data$end) %>% filter(row_number()==1) %>% pull(.data$end)
+          x_range_start = chr_selection %>% filter(.data$chr == interSV$chr2[i]) %>% filter(interSV$pos2[i]>=.data$start & interSV$pos2[i] <= .data$end) %>% filter(row_number()==1) %>% pull(.data$start)
           x_range=(x_range_end-x_range_start)*0.01
           p = p +
             geom_curve(data = data.frame(cov = 1, chr = interSV$chr2[i]),
@@ -679,8 +741,8 @@ ReConPlot <- function(sv,
                        x=interSV$pos1[i], xend=interSV$pos1[i],
                        y=0, yend=max_y_svs_3-size_interchr_SV_tip, curvature=0,  size=size_sv_line, colour=interSV$colour[i])
           # add diagonal line on top
-          x_range_end = chr_selection %>% filter(chr == interSV$chr1[i]) %>% filter(interSV$pos1[i]>=start & interSV$pos1[i] <= end) %>% filter(row_number()==1) %>% pull(end)
-          x_range_start = chr_selection %>% filter(chr == interSV$chr1[i]) %>% filter(interSV$pos1[i]>=start & interSV$pos1[i] <= end) %>% filter(row_number()==1) %>% pull(start)
+          x_range_end = chr_selection %>% filter( .data$chr == interSV$chr1[i]) %>% filter(interSV$pos1[i]>= .data$start & interSV$pos1[i] <=  .data$end) %>% filter(row_number()==1) %>% pull( .data$end)
+          x_range_start = chr_selection %>% filter( .data$chr == interSV$chr1[i]) %>% filter(interSV$pos1[i]>= .data$start & interSV$pos1[i] <=  .data$end) %>% filter(row_number()==1) %>% pull( .data$start)
           x_range=(x_range_end-x_range_start)*0.01
           p = p +
             geom_curve(data = data.frame(cov = 1, chr = interSV$chr1[i]),
@@ -719,8 +781,8 @@ ReConPlot <- function(sv,
                          x=interSV_other_chrs$pos2[i], xend=interSV_other_chrs$pos2[i],
                          y=0, yend=max_y_svs_3-0.2, curvature=0,  size=size_sv_line, colour=interSV_other_chrs$colour[i])
             # add diagonal line on top
-            x_range_end = chr_selection %>% filter(chr == interSV_other_chrs$chr2[i]) %>% filter(interSV_other_chrs$pos2[i]>=start & interSV_other_chrs$pos2[i] <= end) %>% filter(row_number()==1) %>% pull(end)
-            x_range_start = chr_selection %>% filter(chr == interSV_other_chrs$chr2[i]) %>% filter(interSV_other_chrs$pos2[i]>=start & interSV_other_chrs$pos2[i] <= end) %>% filter(row_number()==1) %>% pull(start)
+            x_range_end = chr_selection %>% filter(.data$chr == interSV_other_chrs$chr2[i]) %>% filter(interSV_other_chrs$pos2[i]>=.data$start & interSV_other_chrs$pos2[i] <= .data$end) %>% filter(row_number()==1) %>% pull(.data$end)
+            x_range_start = chr_selection %>% filter(.data$chr == interSV_other_chrs$chr2[i]) %>% filter(interSV_other_chrs$pos2[i]>=.data$start & interSV_other_chrs$pos2[i] <= .data$end) %>% filter(row_number()==1) %>% pull(.data$start)
             x_range=(x_range_end-x_range_start)*0.01
             p = p +
               geom_curve(data = data.frame(cov = 1, chr = interSV_other_chrs$chr2[i]),
@@ -750,8 +812,8 @@ ReConPlot <- function(sv,
                          x=interSV_other_chrs$pos1[i], xend=interSV_other_chrs$pos1[i],
                          y=0, yend=max_y_svs_3-0.2, curvature=0,  size=size_sv_line, colour=interSV_other_chrs$colour[i])
             # add diagonal line on top
-    		    x_range_end = chr_selection %>% filter(chr == interSV_other_chrs$chr1[i]) %>% filter(interSV_other_chrs$pos1[i]>=start & interSV_other_chrs$pos1[i] <= end) %>% filter(row_number()==1) %>% pull(end)
-    		    x_range_start = chr_selection %>% filter(chr == interSV_other_chrs$chr1[i]) %>% filter(interSV_other_chrs$pos1[i]>=start & interSV_other_chrs$pos1[i] <= end) %>% filter(row_number()==1) %>% pull(start)
+    		    x_range_end = chr_selection %>% filter(.data$chr == interSV_other_chrs$chr1[i]) %>% filter(interSV_other_chrs$pos1[i]>=.data$start & interSV_other_chrs$pos1[i] <= .data$end) %>% filter(row_number()==1) %>% pull(.data$end)
+    		    x_range_start = chr_selection %>% filter(.data$chr == interSV_other_chrs$chr1[i]) %>% filter(interSV_other_chrs$pos1[i]>=.data$start & interSV_other_chrs$pos1[i] <= .data$end) %>% filter(row_number()==1) %>% pull(.data$start)
     		    x_range=(x_range_end-x_range_start)*0.01
             p = p +
               geom_curve(data = data.frame(cov = 1, chr = interSV_other_chrs$chr1[i]),
@@ -864,42 +926,42 @@ ReConPlot <- function(sv,
   if (! is.null(custom_annotation)){
     # get the maximum coordinates for the chr at hand
     chr.coords <- cnv.plot %>% 
-      group_by(chr) %>% 
-      summarise(start = min(start),
-                end = max(end)) %>% 
+      group_by(.data$chr) %>% 
+      summarise(start = min(.data$start),
+                end = max(.data$end)) %>% 
       ungroup()
     custom_annotation$selected = apply(custom_annotation, 1, function(row){
       sel = FALSE
       chr_i = row["chr"]
       pos_i = row["pos"]
       if (chr_i %in% cnv.plot$chr){
-        max_coord = chr.coords %>% filter(chr == chr_i) %>% pull(end)
-        min_coord = chr.coords %>% filter(chr == chr_i) %>% pull(start)
+        max_coord = chr.coords %>% filter(.data$chr == chr_i) %>% pull(.data$end)
+        min_coord = chr.coords %>% filter(.data$chr == chr_i) %>% pull(.data$start)
         if (dplyr::between(as.numeric(pos_i),min_coord, max_coord)){
           sel=TRUE
         }
       }
       return(sel)
     })
-    custom_annotation_selected <- custom_annotation %>% filter(selected)
+    custom_annotation_selected <- custom_annotation %>% filter(.data$selected)
     if (nrow(custom_annotation_selected) > 0){
 
       #Add anchor to have same plot area
       anchor.df <- data.frame()
       for (chr_i in unique(chr.coords$chr)){
-        max_coord = chr.coords %>% filter(chr == chr_i) %>% pull(end)
-        min_coord = chr.coords %>% filter(chr == chr_i) %>% pull(start)
+        max_coord = chr.coords %>% filter(.data$chr == chr_i) %>% pull(.data$end)
+        min_coord = chr.coords %>% filter(.data$chr == chr_i) %>% pull(.data$start)
         row.min = c("chr"=chr_i, "pos"=min_coord, "y"=0)
         row.max = c("chr"=chr_i, "pos"=max_coord, "y"=0)
         rows=bind_rows(row.min,row.max)
         anchor.df <- bind_rows(anchor.df, rows)
       }
       custom_annotation_selected <- custom_annotation_selected %>% 
-        mutate(y = as.numeric(y),
-               pos = as.numeric(pos))
+        mutate(y = as.numeric(.data$y),
+               pos = as.numeric(.data$pos))
       anchor.df <- anchor.df %>% 
-        mutate(y = as.numeric(y),
-               pos = as.numeric(pos))
+        mutate(y = as.numeric(.data$y),
+               pos = as.numeric(.data$pos))
     
       ann.plot <- ggplot(custom_annotation_selected, aes(x=pos, y=y)) +
         geom_point(col=ann_dot_col, size=ann_dot_size) +
