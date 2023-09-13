@@ -17,3 +17,7 @@ Imports:
     cowplot,
     scales,
     magrittr
+Suggests: 
+    knitr,
+    rmarkdown
+VignetteBuilder: knitr
