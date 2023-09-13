@@ -3,8 +3,7 @@
 #   return(x/step)
 # }
 
-scaler <- function(k) {
-  step <- k
+scaler <- function(step) {
   function(y) seq(0, ceiling(max(y)), by = step)
 }
 
@@ -94,7 +93,7 @@ NULL
 #' @param scale_separation_SV_type_labels Separatation (denoted as a fraction of the y axis XXX) between the SV labels/legend. Defaults to 1/18.
 #' @param pos_SVtype_description Position for the SV labels/legend on the y axis. Defaults to 1000000.
 #' @param window extra spacing on the x axis around the leftmost and rightmost breakpoints detected in the chromosomes selected unless a specific start and end positions for the plot are input.                      
-#' @param xscale Scale for the x axis. Defaults to 10*10^6 to put the x axis in Mbp.
+#' @param xscale Scale for the x axis. Defaults to 10^6 to put the x axis in Mbp.
 #' @param percentage_increase_y_axis Relative percentage to increase the distance of the y axis. XX
 #' @param legend_SV_types Whether to show the legend for the SV types or not. Defaults to TRUE.
 #' @param size_chr_labels Size of the chromsosome labels. Defaults to 7pt (use 5-7pt for publication-ready figures).
@@ -121,7 +120,7 @@ NULL
 #' @param max.cn Cap on the total copy number. Defaults to 8.
 #' @param npc_now Controls spacing, needed to find SV partners on different chromosomes in the plot. Not recommended to change. Defaults to .00625 * 3.
 #' @param scale_ticks Spacing of breaks in the x axis (in bp). Defaults to 20000000 (i.e., 20Mb).
-#' @param size_interchr_SV_tip Size of the line indicating interchromosomal SVs involving chromosomes not shown (that is, not included in chr_selection).
+#' @param size_interchr_SV_tip Size of the line indicating interchromosomal SVs involving chromosomes not shown (that is, not included in chr_selection). Defaults to .1
 #' @param label_interchr_SV Flag to annotate the second chromosome of interchromosomal SVs involving chromosomes not shown. Defaults to FALSE.
 #' @param size_sv_line Linewidth for SVs. Defaults to .1.
 #' @param genome_version Reference genome used. Can be either hg19, hg38, T2T, mm10 or mm39. Defaults to "hg38".
@@ -137,7 +136,7 @@ ReConPlot <- function(sv,
                       scale_separation_SV_type_labels = 1/22,
                       pos_SVtype_description = 5000000,
                       window = 10000000 ,
-                      xscale = 10*10^6,
+                      xscale = 10^6,
                       percentage_increase_y_axis=0.10, #05,
                       legend_SV_types=TRUE,
                       size_chr_labels=7,
@@ -150,7 +149,7 @@ ReConPlot <- function(sv,
 				              colour_TRA="darkgray",
 				              color_minor_cn="#8491B4B2",
 				              upper_limit_karyotype = -0.2,
-				              karyotype_rel_size=.2,
+				              karyotype_rel_size=.1,
 					            custom_annotation=NULL,
 					            ann_dot_col="black",
 					            ann_dot_size=.5,
@@ -161,7 +160,7 @@ ReConPlot <- function(sv,
 					            max.cn=8,
                       npc_now=.00625 * 3,
                       scale_ticks=20000000,
-					            size_interchr_SV_tip = 0.2,
+					            size_interchr_SV_tip=.1,
 					            label_interchr_SV=FALSE,
 					            size_sv_line=0.1,
 				              genome_version="hg38"
@@ -189,7 +188,10 @@ ReConPlot <- function(sv,
   }
   if(is.data.frame(cnv) == FALSE){stop("Error: the copy number data must be input in dataframe format")}
   if(is.data.frame(sv) == FALSE){stop("Error: the SV data must be input in dataframe format")}
-  
+  #Had problems with tibbles
+  cnv <- as.data.frame(cnv)
+  sv <- as.data.frame(sv)
+
   #Check custom annotation dataframe if exists#
   if (! is.null(custom_annotation)){
     required_custom_columns=c("chr", "pos", "y")
@@ -201,7 +203,6 @@ ReConPlot <- function(sv,
   idx = which(sv$pos1 == sv$pos2)
   if(length(idx)>0){sv$pos2[idx] = sv$pos2[idx]+1}
 
-  
   #----------------------------------------------------------------
   # information for the karyotype
   #----------------------------------------------------------------
@@ -296,7 +297,7 @@ ReConPlot <- function(sv,
     now = subset(sv, chr1 == i & chr2 == i)
     if(nrow(now)>0){intraSV = rbind(intraSV, now)}
   }
-
+  
   #----------------------------------------------------------------
   # get interchr SVs
   #----------------------------------------------------------------
@@ -337,29 +338,30 @@ ReConPlot <- function(sv,
       chr_selection$end[i] = end.now + window
     }
   }
-
+  
   if (interFlag){
-
     idx1= which(sv$chr1 != sv$chr2 & sv$chr1 %in% chr_selection$chr)
     idx2= which(sv$chr1 != sv$chr2 & sv$chr2 %in% chr_selection$chr)
     if (length(idx1)>0 | length(idx2)>0){
-      interSV <- sv[c(idx1,idx2),] #  which(sv$chr1 != sv$chr2)  ,]
+      interSV <- sv[unique(c(idx1,idx2)),] #  which(sv$chr1 != sv$chr2)  ,]
       interSV$pos1 <- as.integer(interSV$pos1)
       interSV$pos2 <- as.integer(interSV$pos2)
     }
-
+    
     # get also the interSVs with other chromosomes
     idx1= which(sv$chr1 != sv$chr2 & sv$chr1 %in% chr_selection$chr &  !(sv$chr2 %in% chr_selection$chr))
     idx2= which(sv$chr1 != sv$chr2 & sv$chr2 %in% chr_selection$chr &  !(sv$chr1 %in% chr_selection$chr))
     if (length(idx1)>0 | length(idx2)>0){
-      interSV_other_chrs <- sv[c(idx1,idx2),] #  which(sv$chr1 != sv$chr2)  ,]
+      interSV_other_chrs <- sv[unique(c(idx1,idx2)),] #  which(sv$chr1 != sv$chr2)  ,]
       interSV_other_chrs$pos1 <- as.integer(interSV_other_chrs$pos1)
       interSV_other_chrs$pos2 <- as.integer(interSV_other_chrs$pos2)
     }
 
+    
     #--------------
     # now get copy number for all chrs
     #--------------
+    
     cnv.plot=c()
     for(i in 1:nrow(chr_selection)){
     main.cnv <- subset(cnv, chr == chr_selection$chr[i] &
@@ -420,7 +422,7 @@ ReConPlot <- function(sv,
     karyotype_data_now = karyo.filt
 
   }
-
+  
   # cnv.plot$chr = cnv.plot$chr
   # those with very high copy number value, modify
   cnv.plot$copyNumber[which(cnv.plot$copyNumber >= max.cn)] = max.cn
@@ -431,7 +433,6 @@ ReConPlot <- function(sv,
   max_y_svs_2 = max_y  + ( (scaling_cn_SVs) * max_y) + ( (scaling_cn_SVs) * max_y)
   max_y_svs_3 = max_y  + ( (scaling_cn_SVs) * max_y) + ( (scaling_cn_SVs) * max_y) + ( (scaling_cn_SVs) * max_y) # for the interchr with chrs not displayed
   # max_y_svs_1 = max_y - 0.5
-
   #------------------------------------------------------------------------------------
   # plotting
   #------------------------------------------------------------------------------------
@@ -474,7 +475,7 @@ ReConPlot <- function(sv,
      #return(vec) #paste0("Chromosome ", chrm_name, " (Mb)"))
    }
 
-
+   
  #named_v =  paste0("sdf",chr_selection$chr) 
  # names(named_v) = chr_selection$chr
   #chromosome_labeller = as_labeller(named_v)
@@ -485,8 +486,9 @@ ReConPlot <- function(sv,
 
   # define the breaks on the y axis (cn) to show:
    if (max.cn < 8) {break.step = 1}
-   else if (max.cn >= 8 & max.cn < 25) {break.step = 2}
-   else (break.step = 5)
+   else if (max.cn >= 8 & max.cn <= 20) {break.step = 2}
+   else if (max.cn > 20 & max.cn <= 50) {break.step = 5}
+   else (break.step = 10)
    breaks_y = seq(0,max.cn, break.step)
   # breaks_y = c(0,1,2)
   # breaks_y = c(breaks_y, unique(floor(quantile(2:max_y, probs = seq(.1, .9, by = .1)))))
@@ -556,9 +558,9 @@ ReConPlot <- function(sv,
         intraSV$max_y_sv[which(intraSV$strands %in% c("DEL","DUP","+-", "-+"))] = max_y_svs_1
         # correct the arc;
         intraSV$curve[which( intraSV$strands %in% c("DEL","h2hINV", "+-", "--"))] = abs(intraSV$curve[which( intraSV$strands %in% c("DEL","h2hINV", "+-", "--"))])
-
+        
         # if one breakpoint outside or range, just plot a vertical line, if not the entire arc
-        if (intraSV$pos1[i] >= min_coord &  intraSV$pos2[i] <= max_coord ){ # within range
+        if (intraSV$pos1[i] >= min_coord & intraSV$pos2[i] <= max_coord ){ # within range
           p = p +
             # arc
             geom_curve(data = data.frame(cov = 1, chr = intraSV$chr1[i]),
@@ -583,9 +585,7 @@ ReConPlot <- function(sv,
                        x=intraSV$pos1[i], xend=intraSV$pos1[i],
                        y=0, yend=max_y_svs_3-0.15, curvature=0,  size=size_sv_line, colour=intraSV$colour[i])
           # add diagonal line on top
-          x_range_end = chr_selection %>% filter(.data$chr == intraSV$chr1[i]) %>% filter(intraSV$pos1[i]>=.data$start & intraSV$pos1[i] <= .data$end) %>% filter(row_number()==1) %>% pull(.data$end)
-          x_range_start = chr_selection %>% filter(.data$chr == intraSV$chr1[i]) %>% filter(intraSV$pos1[i]>=.data$start & intraSV$pos1[i] <= .data$end) %>% filter(row_number()==1) %>% pull(.data$start)
-          x_range=(x_range_end-x_range_start)*0.01
+          x_range = (chr_selection$end[which(chr_selection$chr==intraSV$chr1[i])] - chr_selection$start[which(chr_selection$chr==intraSV$chr1[i])]) * 0.01
           p = p +
             geom_curve(data = data.frame(cov = 1, chr = intraSV$chr1[i]),
                        x=intraSV$pos1[i], xend=intraSV$pos1[i]+x_range, #2000000,
@@ -605,9 +605,7 @@ ReConPlot <- function(sv,
                        x=intraSV$pos2[i], xend=intraSV$pos2[i],
                        y=0, yend=max_y_svs_3-0.15, curvature=0,  size=size_sv_line, colour=intraSV$colour[i])
           # add diagonal line on top
-          x_range_end = chr_selection %>% filter(.data$chr == intraSV$chr2[i]) %>% filter(intraSV$pos2[i]>=.data$start & intraSV$pos2[i] <= .data$end) %>% filter(row_number()==1) %>% pull(.data$end)
-          x_range_start = chr_selection %>% filter(.data$chr == intraSV$chr2[i]) %>% filter(intraSV$pos2[i]>=.data$start & intraSV$pos2[i] <= .data$end) %>% filter(row_number()==1) %>% pull(.data$start)
-          x_range=(x_range_end-x_range_start)*0.01
+          x_range = (chr_selection$end[which(chr_selection$chr==intraSV$chr1[i])] - chr_selection$start[which(chr_selection$chr==intraSV$chr1[i])]) * 0.01
           p = p +
             geom_curve(data = data.frame(cov = 1, chr = intraSV$chr2[i]),
                        x=intraSV$pos2[i], xend=intraSV$pos2[i]-x_range, #2000000,
@@ -622,13 +620,16 @@ ReConPlot <- function(sv,
       }
     }
   }
-
+  
   #----------------------------------------------------------------
   # plot interchr SVs involving chrs in levels_chrs
   #----------------------------------------------------------------
+
   if (interFlag){
+
     # # first those involving the middle chromosome  ## missing those with other chrs
-    idx= which(interSV$chr1 %in% chr_selection$chr &  interSV$chr2 %in% chr_selection$chr)
+    idx= which(interSV$chr1 %in% chr_selection$chr & interSV$chr2 %in% chr_selection$chr)
+
     if(length(idx)>0){
       interSV=interSV[idx,]
       # add max
@@ -637,7 +638,6 @@ ReConPlot <- function(sv,
       # change curvature
       interSV$curve[which( interSV$strands %in% c("DEL","h2hINV", "+-", "--"))] = abs(interSV$curve[which( interSV$strands %in% c("DEL","h2hINV", "+-", "--"))])
       info_chrs = data.frame(chrs=chr_selection$chr)
-
       # determine offset: we do so by: (1) compute the total size of the chrs displayed
       total_chr_size = 0; size_in_plot=c()
       for(ii in chr_selection$chr){
@@ -677,7 +677,6 @@ ReConPlot <- function(sv,
           (size_leftmost_chr - interSV$pos1[i]) + # what we need to go of the leftmost chr till the end
           (interSV$pos2[i] - min_range) + # the position in the chr on the right + the value where it starts
           gap
-
         # are there other chrs in between the origin chr (main chr) and the target chr, which in this case is on the right??
         indexes = seq(1,length(chr_selection$chr))
         indexes = which(indexes>position_chr_1 & indexes<position_chr_2)
@@ -690,7 +689,6 @@ ReConPlot <- function(sv,
         max_pos_chr2 =  max(cnv.plot[cnv.plot$chr==chrs_now[1,2],"end"])
         in_range_chr1 = (interSV$pos1[i] > min_pos_chr1 & interSV$pos1[i] < max_pos_chr1)
         in_range_chr2 = (interSV$pos2[i] > min_pos_chr2 & interSV$pos2[i] < max_pos_chr2)
-
         if(in_range_chr1 & in_range_chr2){
           # add vertical lines first
           p = p +
@@ -718,9 +716,7 @@ ReConPlot <- function(sv,
                        x=interSV$pos2[i], xend=interSV$pos2[i],
                        y=0, yend=max_y_svs_3-size_interchr_SV_tip, curvature=0,  size=size_sv_line, colour=interSV$colour[i])
           # add diagonal line on top
-          x_range_end = chr_selection %>% filter(.data$chr == interSV$chr2[i]) %>% filter(interSV$pos2[i]>=.data$start & interSV$pos2[i] <= .data$end) %>% filter(row_number()==1) %>% pull(.data$end)
-          x_range_start = chr_selection %>% filter(.data$chr == interSV$chr2[i]) %>% filter(interSV$pos2[i]>=.data$start & interSV$pos2[i] <= .data$end) %>% filter(row_number()==1) %>% pull(.data$start)
-          x_range=(x_range_end-x_range_start)*0.01
+          x_range = (chr_selection$end[which(chr_selection$chr==interSV$chr1[i])] - chr_selection$start[which(chr_selection$chr==interSV$chr1[i])]) * 0.01
           p = p +
             geom_curve(data = data.frame(cov = 1, chr = interSV$chr2[i]),
                        x=interSV$pos2[i], xend=interSV$pos2[i]-x_range, #2000000,
@@ -741,9 +737,7 @@ ReConPlot <- function(sv,
                        x=interSV$pos1[i], xend=interSV$pos1[i],
                        y=0, yend=max_y_svs_3-size_interchr_SV_tip, curvature=0,  size=size_sv_line, colour=interSV$colour[i])
           # add diagonal line on top
-          x_range_end = chr_selection %>% filter( .data$chr == interSV$chr1[i]) %>% filter(interSV$pos1[i]>= .data$start & interSV$pos1[i] <=  .data$end) %>% filter(row_number()==1) %>% pull( .data$end)
-          x_range_start = chr_selection %>% filter( .data$chr == interSV$chr1[i]) %>% filter(interSV$pos1[i]>= .data$start & interSV$pos1[i] <=  .data$end) %>% filter(row_number()==1) %>% pull( .data$start)
-          x_range=(x_range_end-x_range_start)*0.01
+          x_range = (chr_selection$end[which(chr_selection$chr==interSV$chr1[i])] - chr_selection$start[which(chr_selection$chr==interSV$chr1[i])]) * 0.01
           p = p +
             geom_curve(data = data.frame(cov = 1, chr = interSV$chr1[i]),
                        x=interSV$pos1[i], xend=interSV$pos1[i]-x_range, #2000000,
@@ -762,6 +756,7 @@ ReConPlot <- function(sv,
   #----------------------------------------------------------------
   # plot lines with ticks for interchr SVs involving chrs not displayed
   #----------------------------------------------------------------
+  
   if(interFlag){ #(interSV_other_chrs)){
     if (exists("interSV_other_chrs")){
       for(i in 1:nrow(interSV_other_chrs)){
@@ -779,11 +774,9 @@ ReConPlot <- function(sv,
             p = p +
               geom_curve(data = data.frame(cov = 1, chr = interSV_other_chrs$chr2[i]),
                          x=interSV_other_chrs$pos2[i], xend=interSV_other_chrs$pos2[i],
-                         y=0, yend=max_y_svs_3-0.2, curvature=0,  size=size_sv_line, colour=interSV_other_chrs$colour[i])
+                         y=0, yend=max_y_svs_3-size_interchr_SV_tip, curvature=0,  size=size_sv_line, colour=interSV_other_chrs$colour[i])
             # add diagonal line on top
-            x_range_end = chr_selection %>% filter(.data$chr == interSV_other_chrs$chr2[i]) %>% filter(interSV_other_chrs$pos2[i]>=.data$start & interSV_other_chrs$pos2[i] <= .data$end) %>% filter(row_number()==1) %>% pull(.data$end)
-            x_range_start = chr_selection %>% filter(.data$chr == interSV_other_chrs$chr2[i]) %>% filter(interSV_other_chrs$pos2[i]>=.data$start & interSV_other_chrs$pos2[i] <= .data$end) %>% filter(row_number()==1) %>% pull(.data$start)
-            x_range=(x_range_end-x_range_start)*0.01
+            x_range = (chr_selection$end[which(chr_selection$chr==interSV_other_chrs$chr2[i])] - chr_selection$start[which(chr_selection$chr==interSV_other_chrs$chr2[i])]) * 0.01
             p = p +
               geom_curve(data = data.frame(cov = 1, chr = interSV_other_chrs$chr2[i]),
                          x=interSV_other_chrs$pos2[i], xend=interSV_other_chrs$pos2[i]-x_range, #2000000,
@@ -810,11 +803,9 @@ ReConPlot <- function(sv,
             p = p +
               geom_curve(data = data.frame(cov = 1, chr = interSV_other_chrs$chr1[i]),
                          x=interSV_other_chrs$pos1[i], xend=interSV_other_chrs$pos1[i],
-                         y=0, yend=max_y_svs_3-0.2, curvature=0,  size=size_sv_line, colour=interSV_other_chrs$colour[i])
+                         y=0, yend=max_y_svs_3-size_interchr_SV_tip, curvature=0,  size=size_sv_line, colour=interSV_other_chrs$colour[i])
             # add diagonal line on top
-    		    x_range_end = chr_selection %>% filter(.data$chr == interSV_other_chrs$chr1[i]) %>% filter(interSV_other_chrs$pos1[i]>=.data$start & interSV_other_chrs$pos1[i] <= .data$end) %>% filter(row_number()==1) %>% pull(.data$end)
-    		    x_range_start = chr_selection %>% filter(.data$chr == interSV_other_chrs$chr1[i]) %>% filter(interSV_other_chrs$pos1[i]>=.data$start & interSV_other_chrs$pos1[i] <= .data$end) %>% filter(row_number()==1) %>% pull(.data$start)
-    		    x_range=(x_range_end-x_range_start)*0.01
+            x_range = (chr_selection$end[which(chr_selection$chr==interSV_other_chrs$chr1[i])] - chr_selection$start[which(chr_selection$chr==interSV_other_chrs$chr1[i])]) * 0.01
             p = p +
               geom_curve(data = data.frame(cov = 1, chr = interSV_other_chrs$chr1[i]),
                          x=interSV_other_chrs$pos1[i], xend=interSV_other_chrs$pos1[i]-x_range, #2000000,
@@ -830,7 +821,6 @@ ReConPlot <- function(sv,
       }
     }
   }
-  
   #----------------------------------------------------------------------------
   # highlight genes
   #----------------------------------------------------------------------------
@@ -855,8 +845,7 @@ ReConPlot <- function(sv,
       #Some genes are not in the annotation list -> skip
       if (nrow(gene_coord_now) == 0) {next}
       # are the genes to be plotted in the selected chromosomes?
-      # print(gene_coord_now)
-      # print(chr_selection)
+
       if (gene_coord_now$chr %in% chr_selection$chr){
         if(nrow(gene_coord_now)>0 & gene_coord_now$chr %in% chr_selection$chr &
            gene_coord_now$start > chr_selection$start[which(chr_selection$chr==gene_coord_now$chr)] & # if the gene is outside plotting range discard
@@ -885,7 +874,7 @@ ReConPlot <- function(sv,
           # )
           dat_text <- data.frame(label = gene,
                                  chr= factor(gene_coord_now$chr,levels = chr_selection$chr),
-                                 pos=(gene_coord_now$start+gene_coord_now$end)/2, y= max_y_svs_3-.5
+                                 pos=(gene_coord_now$start+gene_coord_now$end)/2, y= max_y_svs_3
           )
           p = p + geom_text(data = dat_text, mapping = aes(x= pos, y = y, label = label), 
                             size=size_gene_label ,fontface="italic") 
