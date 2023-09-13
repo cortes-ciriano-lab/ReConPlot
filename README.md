@@ -1,3 +1,7 @@
+  <!-- badges: start -->
+  [![R-CMD-check](https://github.com/cortes-ciriano-lab/ReConPlot/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/cortes-ciriano-lab/ReConPlot/actions/workflows/R-CMD-check.yaml)
+  <!-- badges: end -->
+
 # ReConPlot
 R package to visualize complex genomic rearrangements by plotting copy number profiles and structural variants.
 
