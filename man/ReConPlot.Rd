@@ -20,22 +20,22 @@ ReConPlot(
   size_chr_labels = 7,
   size_title = 7,
   size_text = 5,
-  lower_limit_karyotype = -0.7,
-  upper_limit_karyotype = -0.2,
-  colour_band2 = "antiquewhite1",
+  size_gene_label = 1.5,
   colour_band1 = "grey86",
+  colour_band2 = "antiquewhite1",
   colour_DEL = "orange",
   colour_h2hINV = "forestgreen",
   colour_DUP = "darkblue",
   colour_t2tINV = "black",
   colour_TRA = "darkgray",
-  size_gene_label = 1.5,
+  color_minor_cn = "#8491B4B2",
+  upper_limit_karyotype = -0.2,
+  karyotype_rel_size = 0.2,
   custom_annotation = NULL,
   ann_dot_col = "black",
   ann_dot_size = 0.5,
   ann_y_title = "",
   ann_rel_size = 0.4,
-  color_minor_cn = "#8491B4B2",
   curvature_intrachr_SVs = -0.15,
   curvature_interchr_SVs = -0.08,
   max.cn = 8,
@@ -76,19 +76,29 @@ ReConPlot(
 
 \item{size_title}{Size of the plot title. Defaults to 7pt (use 5-7pt for publication-ready figures).}
 
-\item{colour_band2}{Colour of the second background horizintal stripe. Defaults to "antiquewhite1"}
+\item{size_text}{Size of the plot text. Defaults to 5pt (use 5-7pt for publication-ready figures).}
 
-\item{colour_band1}{Colour of the first background horizintal stripe. Defaults to "grey86"}
+\item{size_gene_label}{Size of the gene label text. Defaults to 1.5.}
 
-\item{colour_DEL}{Colour of the arcs representing deletions (DEL)}
+\item{colour_band1}{Colour of the first background horizontal stripe. Defaults to "grey86".}
 
-\item{colour_h2hINV}{Colour of the arcs representing head-to-head inversions (h2hINV).}
+\item{colour_band2}{Colour of the second background horizontal stripe. Defaults to "antiquewhite1".}
 
-\item{colour_DUP}{Colour of the arcs representing duplications (DUP).}
+\item{colour_DEL}{Colour of the arcs representing deletions (DEL). Defaults to "orange".}
 
-\item{colour_t2tINV}{Colour of the arcs representing tail-to-tail inversions (t2tINV).}
+\item{colour_h2hINV}{Colour of the arcs representing head-to-head inversions (h2hINV). Defaults to "forestgreen".}
 
-\item{size_gene_label}{Size of the gene labels. Defaults to 1.5.}
+\item{colour_DUP}{Colour of the arcs representing duplications (DUP). Defaults to "darkblue".}
+
+\item{colour_t2tINV}{Colour of the arcs representing tail-to-tail inversions (t2tINV). Defaults to "black".}
+
+\item{colour_TRA}{Colour of the arcs representing translocations (TRA). Defaults to "darkgray".}
+
+\item{color_minor_cn}{Colour for the horizontal bars representing the minor copy number values. Defaults to "#8491B4B2".}
+
+\item{upper_limit_karyotype}{Upper limit in y-axis for karyotype ideogram. Defaults to -0.2 .}
+
+\item{karyotype_rel_size}{Size of the karyotype ideogram, relative to the CN y axis. Defaults to .2.}
 
 \item{custom_annotation}{Dataframe with custom annotation. Must contain columns "chr", "pos" and "y". Defaults to NULL.}
 
@@ -100,13 +110,11 @@ ReConPlot(
 
 \item{ann_rel_size}{Size of the annotation plot, relative to the main plot. Defaults to 0.4.}
 
-\item{color_minor_cn}{Colour for the horizontal bars representing the minor copy number values.}
+\item{curvature_intrachr_SVs}{Curvature for the arcs represeting intrachromosomal SVs. Defaults to -0.15.}
 
-\item{curvature_intrachr_SVs}{Curvature for the arcs represeting intrachromosomal SVs. Defaults to -0.15}
+\item{curvature_interchr_SVs}{Curvature for the arcs represeting interchromosomal SVs. Defaults to -0.08.}
 
-\item{curvature_interchr_SVs}{Curvature for the arcs represeting interchromosomal SVs. Defaults to -0.08}
-
-\item{max.cn}{Cap on the total copy number (for the minor we do not need as the minor will never be very high). Defaults to 10.}
+\item{max.cn}{Cap on the total copy number. Defaults to 8.}
 
 \item{npc_now}{Controls spacing, needed to find SV partners on different chromosomes in the plot. Not recommended to change. Defaults to .00625 * 3.}
 
@@ -116,13 +124,10 @@ ReConPlot(
 
 \item{label_interchr_SV}{Flag to annotate the second chromosome of interchromosomal SVs involving chromosomes not shown. Defaults to FALSE.}
 
-\item{size_sv_line}{Linewidth for SVs. Defaults to .1 .}
+\item{size_sv_line}{Linewidth for SVs. Defaults to .1.}
 
-\item{genome_version}{Reference genome used. Can be either hg19, hg38, T2T, mm10 or mm39.}
+\item{genome_version}{Reference genome used. Can be either hg19, hg38, T2T, mm10 or mm39. Defaults to "hg38".}
 }
 \description{
 This function generates publication-quality plots for copy number and structural variation profiles, which are particularly useful in the context of cancer genome analysis projects.
-}
-\examples{
-Please the tutorial of the package.
 }

@@ -1,7 +1,8 @@
 #--------------------------------------------------------------------------------------------------------------------------
-formatter1000 <- function(x){
-  x/1000000
-}
+# formatter1000 <- function(x, step){
+#   return(x/step)
+# }
+
 scaler <- function(k) {
   step <- k
   function(y) seq(0, ceiling(max(y)), by = step)
@@ -11,11 +12,8 @@ scaler <- function(k) {
 # load dependencies
 #-------------------------------------------------
 suppressMessages(suppressWarnings(library(tidyverse)))
-# suppressMessages(suppressWarnings(library(grid)))
-# suppressMessages(suppressWarnings(library(gridExtra)))
-# suppressMessages(suppressWarnings(library(ggthemes)))
 suppressMessages(suppressWarnings(library(cowplot)))
-# suppressMessages(suppressWarnings(library(ggplotify)))
+suppressMessages(suppressWarnings(library(scales)))
 options(scipen=999)
 
 #' Function to plot genomic rearrangements (allele-specific copy number profiles and structural variants)
@@ -23,6 +21,8 @@ options(scipen=999)
 #' This function generates publication-quality plots for copy number and structural variation profiles, which are particularly useful in the context of cancer genome analysis projects.
 #' @import tidyverse
 #' @import cowplot
+#' @import dplyr
+#' @import scales
 #' @param sv Dataframe with SV information. Required, no default value.
 #' @param cnv Dataframe with copy number information. Required, no default value.
 #' @param title Title of the plot. Defaults to "".
@@ -31,35 +31,39 @@ options(scipen=999)
 #' @param scaling_cn_SVs Relative dimension of the panel representing the SVs with respect to the copy number profile. Defaults to 1/6.
 #' @param scale_separation_SV_type_labels Separatation (denoted as a fraction of the y axis XXX) between the SV labels/legend. Defaults to 1/18.
 #' @param pos_SVtype_description Position for the SV labels/legend on the y axis. Defaults to 1000000.
-#' @param window extra spacing on the x axis around the leftmost and rightmost breakpoints detected in the chromosomes selected unless a specific start and end positions for the plot are input.
+#' @param window extra spacing on the x axis around the leftmost and rightmost breakpoints detected in the chromosomes selected unless a specific start and end positions for the plot are input.                      
+#' @param xscale Scale for the x axis. Defaults to 10*10^6 to put the x axis in Mbp.
 #' @param percentage_increase_y_axis Relative percentage to increase the distance of the y axis. XX
 #' @param legend_SV_types Whether to show the legend for the SV types or not. Defaults to TRUE.
 #' @param size_chr_labels Size of the chromsosome labels. Defaults to 7pt (use 5-7pt for publication-ready figures).
 #' @param size_title Size of the plot title. Defaults to 7pt (use 5-7pt for publication-ready figures).
-#' @param colour_band1 Colour of the first background horizintal stripe. Defaults to "grey86"
-#' @param colour_band2 Colour of the second background horizintal stripe. Defaults to "antiquewhite1"
-#' @param colour_DEL Colour of the arcs representing deletions (DEL)
-#' @param colour_h2hINV Colour of the arcs representing head-to-head inversions (h2hINV).
-#' @param colour_DUP Colour of the arcs representing duplications (DUP).
-#' @param colour_t2tINV Colour of the arcs representing tail-to-tail inversions (t2tINV).
-#' @param size_gene_label Size of the gene labels. Defaults to 1.5.
+#' @param size_text Size of the plot text. Defaults to 5pt (use 5-7pt for publication-ready figures).
+#' @param size_gene_label Size of the gene label text. Defaults to 1.5.
+#' @param colour_band1 Colour of the first background horizontal stripe. Defaults to "grey86".
+#' @param colour_band2 Colour of the second background horizontal stripe. Defaults to "antiquewhite1".
+#' @param colour_DEL Colour of the arcs representing deletions (DEL). Defaults to "orange".
+#' @param colour_h2hINV Colour of the arcs representing head-to-head inversions (h2hINV). Defaults to "forestgreen".
+#' @param colour_DUP Colour of the arcs representing duplications (DUP). Defaults to "darkblue".
+#' @param colour_t2tINV Colour of the arcs representing tail-to-tail inversions (t2tINV). Defaults to "black".
+#' @param colour_TRA Colour of the arcs representing translocations (TRA). Defaults to "darkgray".
+#' @param color_minor_cn Colour for the horizontal bars representing the minor copy number values. Defaults to "#8491B4B2".
+#' @param upper_limit_karyotype Upper limit in y-axis for karyotype ideogram. Defaults to -0.2 .
+#' @param karyotype_rel_size Size of the karyotype ideogram, relative to the CN y axis. Defaults to .2.
 #' @param custom_annotation Dataframe with custom annotation. Must contain columns "chr", "pos" and "y". Defaults to NULL.
 #' @param ann_dot_col Colour of the dots in annotation plot. Defaults to "0.5."black".
 #' @param ann_dot_size Size of the dots in annotation plot. Defaults to 0.5.
 #' @param ann_y_title Label for Y-axis in annotation plot. Defaults to "".
 #' @param ann_rel_size Size of the annotation plot, relative to the main plot. Defaults to 0.4.
-#' @param color_minor_cn Colour for the horizontal bars representing the minor copy number values.
-#' @param curvature_intrachr_SVs Curvature for the arcs represeting intrachromosomal SVs. Defaults to -0.15
-#' @param curvature_interchr_SVs Curvature for the arcs represeting interchromosomal SVs. Defaults to -0.08
-#' @param max.cn Cap on the total copy number (for the minor we do not need as the minor will never be very high). Defaults to 10.
+#' @param curvature_intrachr_SVs Curvature for the arcs represeting intrachromosomal SVs. Defaults to -0.15.
+#' @param curvature_interchr_SVs Curvature for the arcs represeting interchromosomal SVs. Defaults to -0.08.
+#' @param max.cn Cap on the total copy number. Defaults to 8.
 #' @param npc_now Controls spacing, needed to find SV partners on different chromosomes in the plot. Not recommended to change. Defaults to .00625 * 3.
-#' @param genome_version Reference genome used. Can be either hg19, hg38, T2T, mm10 or mm39.
 #' @param scale_ticks Spacing of breaks in the x axis (in bp). Defaults to 20000000 (i.e., 20Mb).
-#' @param xscale Scale for the x axis. Defaults to 10*10^6 to put the x axis in Mbp.
 #' @param size_interchr_SV_tip Size of the line indicating interchromosomal SVs involving chromosomes not shown (that is, not included in chr_selection).
 #' @param label_interchr_SV Flag to annotate the second chromosome of interchromosomal SVs involving chromosomes not shown. Defaults to FALSE.
-#' @param size_sv_line Linewidth for SVs. Defaults to .1 .
-#' @examples Please the tutorial of the package.
+#' @param size_sv_line Linewidth for SVs. Defaults to .1.
+#' @param genome_version Reference genome used. Can be either hg19, hg38, T2T, mm10 or mm39. Defaults to "hg38".
+#' @examples
 #' @export
 
 ReConPlot <- function(sv,
@@ -77,19 +81,19 @@ ReConPlot <- function(sv,
                       size_chr_labels=7,
                       size_title=7,
                       size_text=5,
-					            lower_limit_karyotype=-0.7,
-				              upper_limit_karyotype=-0.2,
-                      colour_band2= "antiquewhite1", colour_band1="grey86",
+                      size_gene_label=1.5,
+                      colour_band1="grey86", colour_band2= "antiquewhite1", 
                       colour_DEL = "orange", colour_h2hINV="forestgreen", 
 				              colour_DUP="darkblue", colour_t2tINV="black",
 				              colour_TRA="darkgray",
-                      size_gene_label=1.5,
+				              color_minor_cn="#8491B4B2",
+				              upper_limit_karyotype = -0.2,
+				              karyotype_rel_size=.2,
 					            custom_annotation=NULL,
 					            ann_dot_col="black",
 					            ann_dot_size=.5,
 					            ann_y_title="",
 					            ann_rel_size=.4, 
-                      color_minor_cn="#8491B4B2",
                       curvature_intrachr_SVs=-0.15,
                       curvature_interchr_SVs=-0.08, 
 					            max.cn=8,
@@ -393,6 +397,9 @@ ReConPlot <- function(sv,
   ## plot karyotype
   #karyotype_data_now$chr = as.vector(karyotype_data_now$chr)
   #karyotype_data_now$chr = factor(karyotype_data_now$chr, levels=chr_selection$chr)
+  
+  karyotype_space=max_y_rectagle*karyotype_rel_size
+  lower_limit_karyotype=upper_limit_karyotype-(max_y_rectagle*karyotype_rel_size)
   p = p + geom_rect(data=karyotype_data_now,
                     mapping = aes(xmin = start, xmax = end, ymin = lower_limit_karyotype, ymax = upper_limit_karyotype, group=chr), # can change the default values for karyotype
                     fill = karyotype_data_now$color, color="black",size=.1)
@@ -463,7 +470,7 @@ ReConPlot <- function(sv,
     scale_y_continuous(limits = c(lower_limit_karyotype - 0.05,max_y_svs_3+0.5),  breaks=breaks_y, expand = 1,
                        labels=c(breaks_y[1:length(breaks_y)-1], paste0(">=",breaks_y[length(breaks_y)]))) + #seq(0,max_y,2)) +
     scale_x_continuous(expand=c(0,0),
-                       labels=formatter1000,
+                       labels=number_format(scale=1/xscale),
                        breaks=scaler(scale_ticks))
   
   # add lines where the SVs go
