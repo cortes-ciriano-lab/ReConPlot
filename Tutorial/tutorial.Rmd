@@ -82,7 +82,7 @@ chr_selection = data.frame(
 )
 ```
 
-Once the regions of interest is defined, we can generate the rearrangement plot.
+Once the regions of interest is defined, we can generate the plot.
 For example, we can plot the genomic rearrangement profile for chromosome 10:
 
 ```{r, echo=TRUE, fig.width = (7.5/2.4), fig.height=(5.5/2.4), fig.align='center'}
@@ -133,7 +133,7 @@ print(plot)
 ```
 
 We can also change the relative span of the SV and copy number plots using the argument *scaling_cn_SVs*, which defaults to 1/6.
-The dimensions of the Giemsa stain track can be modified using the parameters *lower_limit_karyotype* and *upper_limit_karyotype*.
+The dimensions of the Giemsa stain track can be modified using the parameters *upper_limit_karyotype* and *karyotype_rel_size*.
 
 ```{r, echo=TRUE , fig.width = (12/2.4), fig.height=(5.5/2.4), fig.align='center'}
 chrs=c("chr10")
@@ -151,8 +151,8 @@ color_minor_cn="steelblue2",
 size_title = 7,
 legend_SV_types=T,
 scaling_cn_SVs = 1/18,
-lower_limit_karyotype = -0.4, 
-upper_limit_karyotype = -0.2,
+upper_limit_karyotype = -0.1, 
+karyotype_rel_size = 0.3,
 pos_SVtype_description=1000000,
 scale_separation_SV_type_labels=1/23,
 curvature_intrachr_SVs = -0.1,
@@ -182,8 +182,6 @@ color_minor_cn="steelblue2",
 size_title = 7,
 legend_SV_types=T,
 scaling_cn_SVs = 1/18,
-lower_limit_karyotype = -0.4, 
-upper_limit_karyotype = -0.2,
 pos_SVtype_description=1000000,
 scale_separation_SV_type_labels=1/23,
 curvature_intrachr_SVs = -0.1,
@@ -229,8 +227,6 @@ size_chr_labels=5,
 legend_SV_types=T,
 scale_separation_SV_type_labels=1/23,
 max.cn = 4,
-lower_limit_karyotype = -0.4,
-upper_limit_karyotype = -0.2,
 scale_ticks=20000000)
 
 print(plot)
@@ -298,7 +294,7 @@ scale_ticks=20000000)
 print(plot)
 ```
 
-Finally, an annotation plot can be added below the Recon plot, by providing a dataframe with the columns "chr", "pos" and "y" and the parameter *custom_annotation*.
+Finally, an annotation plot can be added below the ReCon plot, by providing a dataframe with the columns "chr", "pos" and "y" and the parameter *custom_annotation*.
 Only the points within the *chr_selection* point of view will be displayed.
 "y" can represent a scale of user definition.
 In the example below, we annotate the plot with SNVs where "y" represents the allele frequency.
@@ -336,10 +332,10 @@ ann_rel_size=.4
 print(plot + theme(plot.margin=margin(t=1, unit = "cm")))
 ```
 
-The Recon plots are ggplot objects and can be modified after generation as such.
+The ReCon plots are ggplot objects and can be modified after generation as such.
 They can be easily saved to a PDF file.
 In our experience, the following dimensions work well for publication-quality figures and written reports.
-If using an annotation plot in combination with the Recon plot, the height might need to be increased.
+If using an annotation plot in combination with the ReCon plot, the height might need to be increased.
 
 ```{r, eval=FALSE, echo=TRUE, fig.width = (12/2.4), fig.height=(4/2.4), fig.align='center'}
 ggsave(filename = "example_ReConPlot.pdf", plot = p, width = 19, height = 5, units = "cm")
