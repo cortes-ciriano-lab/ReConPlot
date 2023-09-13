@@ -3,5 +3,7 @@
 export("%>%")
 export(ReConPlot)
 import(cowplot)
+import(dplyr)
+import(scales)
 import(tidyverse)
 importFrom(magrittr,"%>%")

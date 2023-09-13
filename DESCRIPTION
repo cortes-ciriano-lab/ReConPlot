@@ -1,6 +1,6 @@
 Package: ReConPlot
-Title: ReConPlot: REarrangement and COpy Number PLOT. 
-Version: 0.1
+Title: ReConPlot: REarrangement and COpy Number PLOT
+Version: 0.2
 Authors@R: 
     person("Jose", "Espejo Valle-Inclan", , "jespejo@ebi.ac.uk", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0002-4857-5984"))
@@ -13,4 +13,7 @@ Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.2.3
 Imports:
     tidyverse,
-    cowplot
+    dplyr,
+    cowplot,
+    scales,
+    magrittr

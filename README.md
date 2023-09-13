@@ -73,15 +73,22 @@ chr1     0 2.5e+08
 ```
 You can then generate the plot with the ReconPlot function:
 ```
-plot = ReConPlot(sv_data,
+p = ReConPlot(sv_data,
 cn_data,
 chr_selection=chr_selection,
 legend_SV_types=T,
 pos_SVtype_description=1000000,
 scale_separation_SV_type_labels=1/23,
 title="Example")
-print(plot)
+print(p)
 ```
+The ReCon plots are ggplot objects and can be modified after generation as such, and they can be easily saved to a PDF file.
+In our experience, the following dimensions work well for publication-quality figures and written reports. If using an annotation plot in combination with the ReCon plot, the height might need to be increased.
+
+```
+ggsave(filename = "example_ReConPlot.pdf", plot = p, width = 19, height = 5, units = "cm")
+```
+
 Please visit the [tutorial](Tutorial/tutorial.pdf) for advanced usage.
 
 # Contact
