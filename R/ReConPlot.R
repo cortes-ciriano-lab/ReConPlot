@@ -337,8 +337,11 @@ ReConPlot <- function(sv,
       if(length(idx)>0){end.now=max(end.now[idx])}else{end.now=250000000} # arbitrarily high number so the entire chr is displayed
       chr_selection$end[i] = end.now + window
     }
+    #Set to maximum of chromosome if above it
+    if (chr_selection$end[i] > max(karyotype_data_now$end[karyotype_data_now$chr == chr_selection$chr])){
+      chr_selection$end[i] = max(karyotype_data_now$end[karyotype_data_now$chr == chr_selection$chr])
+    }
   }
-  
   if (interFlag){
     idx1= which(sv$chr1 != sv$chr2 & sv$chr1 %in% chr_selection$chr)
     idx2= which(sv$chr1 != sv$chr2 & sv$chr2 %in% chr_selection$chr)
@@ -806,6 +809,7 @@ ReConPlot <- function(sv,
                          y=0, yend=max_y_svs_3-size_interchr_SV_tip, curvature=0,  size=size_sv_line, colour=interSV_other_chrs$colour[i])
             # add diagonal line on top
             x_range = (chr_selection$end[which(chr_selection$chr==interSV_other_chrs$chr1[i])] - chr_selection$start[which(chr_selection$chr==interSV_other_chrs$chr1[i])]) * 0.01
+
             p = p +
               geom_curve(data = data.frame(cov = 1, chr = interSV_other_chrs$chr1[i]),
                          x=interSV_other_chrs$pos1[i], xend=interSV_other_chrs$pos1[i]-x_range, #2000000,
