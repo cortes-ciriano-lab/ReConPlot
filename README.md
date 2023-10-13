@@ -17,6 +17,7 @@ Or use devtools to install directly from GitHub within R:
 ```
 > devtools::install_github("cortes-ciriano-lab/ReConPlot")
 ```
+ReConPlot needs a ggplot version >=3.4.0. 
 
 # How to use and examples
 Please see the detailed tutorial and documentation of the package for examples and best practices for using ReConPlot to generate publication-quality figures.
