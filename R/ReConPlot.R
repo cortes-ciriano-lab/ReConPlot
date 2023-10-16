@@ -115,6 +115,7 @@ NULL
 #' @param ann_dot_size Size of the dots in annotation plot. Defaults to 0.5.
 #' @param ann_y_title Label for Y-axis in annotation plot. Defaults to "".
 #' @param ann_rel_size Size of the annotation plot, relative to the main plot. Defaults to 0.4.
+#' @param ann_one_scale Plot the annotation y-axis between 0 and 1. Boolean, defaults to FALSE.
 #' @param curvature_intrachr_SVs Curvature for the arcs represeting intrachromosomal SVs. Defaults to -0.15.
 #' @param curvature_interchr_SVs Curvature for the arcs represeting interchromosomal SVs. Defaults to -0.08.
 #' @param max.cn Cap on the total copy number. Defaults to 8.
@@ -154,7 +155,8 @@ ReConPlot <- function(sv,
 					            ann_dot_col="black",
 					            ann_dot_size=.5,
 					            ann_y_title="",
-					            ann_rel_size=.4, 
+					            ann_rel_size=.4,
+					            ann_one_scale=FALSE,
                       curvature_intrachr_SVs=-0.15,
                       curvature_interchr_SVs=-0.08, 
 					            max.cn=8,
@@ -983,6 +985,9 @@ ReConPlot <- function(sv,
           plot.title = element_blank(),
           legend.position = "none"
         )
+      if (ann_one_scale) {
+        ann.plot = ann.plot + scale_y_continuous(limits=c(0,1), breaks = seq(0,1,.25))
+      }
     }
   }
   if (exists("ann.plot")){
