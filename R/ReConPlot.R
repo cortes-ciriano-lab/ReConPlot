@@ -434,9 +434,11 @@ ReConPlot <- function(sv,
   max_y = max.cn # max(c( cnv.plot$copyNumber)) # max copy number value
   max_y_rectagle = max_y
   max_y = max_y + (max_y* percentage_increase_y_axis) # add 10% to y axis
-  max_y_svs_1 = max_y  + ( (scaling_cn_SVs) * max_y)
-  max_y_svs_2 = max_y  + ( (scaling_cn_SVs) * max_y) + ( (scaling_cn_SVs) * max_y)
-  max_y_svs_3 = max_y  + ( (scaling_cn_SVs) * max_y) + ( (scaling_cn_SVs) * max_y) + ( (scaling_cn_SVs) * max_y) # for the interchr with chrs not displayed
+  max_y_svs_1 = max_y + (scaling_cn_SVs* max_y)
+  max_y_svs_2 = max_y + 2*(scaling_cn_SVs* max_y)
+  max_y_svs_3 = max_y + 2.5*(scaling_cn_SVs* max_y) # for the interchr with chrs not displayed
+  max_y_svs_4 = max_y + 2.55*(scaling_cn_SVs* max_y) # for the genes
+  
   # max_y_svs_1 = max_y - 0.5
   #------------------------------------------------------------------------------------
   # plotting
@@ -865,11 +867,11 @@ ReConPlot <- function(sv,
             geom_curve(data = data.frame(cov = 1, chr = gene_coord_now$chr),
                        x=gene_coord_now$start, xend=gene_coord_now$start,
                        y=0, #max_y_svs_2 + (max_y_svs_3-max_y_svs_2)/2,
-                       yend=max_y_svs_3-1, curvature=0,  size=0.25, colour="green",alpha=.75) +
+                       yend=max_y_svs_3-size_interchr_SV_tip, curvature=0,  size=0.25, colour="green",alpha=.75) +
             geom_rect(data = data.frame(cov = 1, chr = gene_coord_now$chr),
                       xmin=gene_coord_now$start, xmax=gene_coord_now$end,
                       ymin=0, #max_y_svs_2 + (max_y_svs_3-max_y_svs_2)/2,
-                      ymax=max_y_svs_3-1,
+                      ymax=max_y_svs_3-size_interchr_SV_tip,
                       size=0.25, fill = "green", alpha=.6)
           
           
@@ -880,13 +882,14 @@ ReConPlot <- function(sv,
           # )
           dat_text <- data.frame(label = gene,
                                  chr= factor(gene_coord_now$chr,levels = chr_selection$chr),
-                                 pos=(gene_coord_now$start+gene_coord_now$end)/2, y= max_y_svs_3
+                                 pos=(gene_coord_now$start+gene_coord_now$end)/2, y= max_y_svs_4
           )
+          p = p + geom_point(data= dat_text, mapping = aes(x= pos, y = max_y_svs_3-size_interchr_SV_tip),
+                             size=.5 ,colour="darkblue")
           p = p + geom_text(data = dat_text, mapping = aes(x= pos, y = y, label = label), 
                             size=size_gene_label ,fontface="italic") 
           # add point
-          p = p + geom_point(data= dat_text, mapping = aes(x= pos, y = max_y_svs_3-1),
-                             size=.5 ,colour="darkblue")
+         
         }
       }
     }
