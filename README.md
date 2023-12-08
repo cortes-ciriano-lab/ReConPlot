@@ -32,6 +32,7 @@ You will need three dataframes:
 1. SV data (with columns chr1, pos1, chr2, pos2 and strands (+- notation)
 2. CN data (with columns chr, start, end, copyNumber and minorAlleleCopyNumber)
 3. Chromosome selection with genomic region(s) to plot (with columns chr, start, end)
+   
 Any extra column in the data frames will not be read. 
 
 ```
