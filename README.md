@@ -1,15 +1,15 @@
 # ReConPlot
 R package to visualize complex genomic rearrangements by plotting copy number profiles and structural variants.
 
-If you use ReConPlot please cite our [pre-print](https://www.biorxiv.org/content/10.1101/2023.02.24.529890v2)
+If you use ReConPlot please cite our [paper](https://doi.org/10.1093/bioinformatics/btad719)
 ```
 ReConPlot – an R package for the visualization and interpretation of genomic rearrangements
 Jose Espejo Valle-Inclán, Isidro Cortés-Ciriano
-bioRxiv 2023.02.24.529890; doi: https://doi.org/10.1101/2023.02.24.529890
+Bioinformatics, Volume 39, Issue 12, December 2023, btad719, https://doi.org/10.1093/bioinformatics/btad719
 ```
 
 # Installation
-You can clone this repository and install using the following command in the command line:
+You can clone this repository and install it using the following command in the command line:
 ```
 R CMD INSTALL ReConPlot/
 ```
@@ -20,15 +20,15 @@ Or use devtools to install directly from GitHub within R:
 ReConPlot needs a ggplot version >=3.4.0. 
 
 # How to use and examples
-Please see the detailed tutorial and documentation of the package for examples and best practices for using ReConPlot to generate publication-quality figures.
+Please take a look at the detailed tutorial and documentation of the package for examples and best practices for using ReConPlot to generate publication-quality figures.
 
 ## Quick start
-First load the package
+First, load the package
 ```
 library(ggplot2)
 library(ReConPlot)
 ```
-You will need three dataframes:
+You will need three data frames:
 1. SV data (with columns chr1, pos1, chr2, pos2 and strands (+- notation)
 2. CN data (with columns chr, start, end, copyNumber and minorAlleleCopyNumber)
 3. Chromosome selection with genomic region(s) to plot (with columns chr, start, end)
@@ -91,7 +91,7 @@ In our experience, the following dimensions work well for publication-quality fi
 ggsave(filename = "example_ReConPlot.pdf", plot = p, width = 19, height = 5, units = "cm")
 ```
 
-Please visit the [tutorial](Tutorial/tutorial.pdf) for advanced usage.
+For advanced usage, please visit the [tutorial](Tutorial/tutorial.pdf).
 
 # Contact
 If you have any comments or suggestions please raise an issue or contact us:\
