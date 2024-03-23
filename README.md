@@ -29,8 +29,8 @@ library(ggplot2)
 library(ReConPlot)
 ```
 You will need three data frames:
-1. SV data (with columns chr1, pos1, chr2, pos2 and strands (+- notation)
-2. CN data (with columns chr, start, end, copyNumber and minorAlleleCopyNumber)
+1. SV data (with columns chr1, pos1, chr2, pos2 and strands (+- notation). You can include single breakends (SBE) or insertions in the dataframe, by setting "chr2" and "pos2" to "." and strands to "SBE"/"INS".
+'2. CN data (with columns chr, start, end, copyNumber and minorAlleleCopyNumber)
 3. Chromosome selection with genomic region(s) to plot (with columns chr, start, end)
    
 Any extra column in the data frames will not be read. 
@@ -39,13 +39,11 @@ Any extra column in the data frames will not be read.
 #SV data
 print(head(sv_data))
 
-sample chr1      pos1  chr2      pos2 filter homlen homseq inslen strands
-Test chr1 203476803  chr1 204967317   PASS      .      .      .      -+
-Test chr1 203476817  chr1 204967172   PASS      .      .      .      +-
-Test chr1 203507815  chr9  37245409   PASS      .      .      .      +-
-Test chr1 203509239 chr12  69072120   PASS      3    GTA      .      ++
-Test chr1 203509728 chr12  69071885   PASS      .      .      .      -+
-Test chr1 203509991  chr1 203522717   PASS      1      A      .      +-
+chr1     pos1  chr2     pos2 strands
+chr15 25000000 chr15 60000000      ++
+chr15 50000000     .        .     INS
+chr15 85000000 chr20 10000000      +-
+chr20 20000000     .        .     SBE
 ```
 
 ```
