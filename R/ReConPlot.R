@@ -107,6 +107,8 @@ NULL
 #' @param colour_DUP Colour of the arcs representing duplications (DUP). Defaults to "darkblue".
 #' @param colour_t2tINV Colour of the arcs representing tail-to-tail inversions (t2tINV). Defaults to "black".
 #' @param colour_TRA Colour of the arcs representing translocations (TRA). Defaults to "darkgray".
+#' @param colour_INS Colour of the lines representing insertions (INS). Defaults to "darkgoldenrod4".
+#' @param colour_SBE Colour of the arcs representing single breakends (SBE). Defaults to "bisque3".
 #' @param color_minor_cn Colour for the horizontal bars representing the minor copy number values. Defaults to "#8491B4B2".
 #' @param upper_limit_karyotype Upper limit in y-axis for karyotype ideogram. Defaults to -0.2 .
 #' @param karyotype_rel_size Size of the karyotype ideogram, relative to the CN y axis. Defaults to .2.
@@ -147,7 +149,8 @@ ReConPlot <- function(sv,
                       colour_band1="grey86", colour_band2= "antiquewhite1", 
                       colour_DEL = "orange", colour_h2hINV="forestgreen", 
 				              colour_DUP="darkblue", colour_t2tINV="black",
-				              colour_TRA="darkgray",
+				              colour_TRA="darkgray", 
+				              colour_INS = "darkgoldenrod4", colour_SBE="bisque3",
 				              color_minor_cn="#8491B4B2",
 				              upper_limit_karyotype = -0.2,
 				              karyotype_rel_size=.1,
@@ -174,7 +177,7 @@ ReConPlot <- function(sv,
 	if ( sum(!( chr_selection$chr %in% paste0("chr",c(1:22,"X","Y"))))  >0){
 		stop("Error: the input data contains non-supported chromosomes. Supported chromosomes include the autosomes (chr1-chr22) and sexual chromsomes (chrX and chrY)")
 	}
-	if ( sum( ! c(sv$chr1, sv$chr2) %in% paste0("chr",c(1:22,"X","Y"))) >0){
+	if ( sum( ! c(sv$chr1, sv$chr2) %in% c(paste0("chr",c(1:22,"X","Y")), ".")) >0){
 		 stop("Error: the input SV data contains non-supported chromosomes. Supported chromosomes include the autosomes (chr1-chr22) and sexual chromsomes (chrX and chrY)")
 	}
 	if ( sum( !( cnv$chr %in% paste0("chr",c(1:22,"X","Y")) >0))){
@@ -255,6 +258,14 @@ ReConPlot <- function(sv,
   #----------------------------------------------------------------
   # process SV data
   #----------------------------------------------------------------
+  
+  sv.ins <- sv %>% filter(strands == "INS")
+  sv.ins$colour <- colour_INS
+  sv.sbe <- sv %>% filter(strands == "SBE")
+  sv.sbe$colour <- colour_SBE
+  
+  sv <- sv %>% filter(strands != "SBE" & strands != "INS")
+  
   sv$pos1 <- as.integer(sv$pos1)
   sv$pos2 <- as.integer(sv$pos2)
   #sv$ori = paste0(sv$strand1,sv$strand2)
@@ -323,7 +334,15 @@ ReConPlot <- function(sv,
       # find start
       pos1 = sv$pos1[sv$chr1==chr.now]; if(length(pos1)>0){pos1=min(pos1)}
       pos2 = sv$pos2[sv$chr2==chr.now]; if(length(pos2)>0){pos2=min(pos2)}
-      start.now = c(pos1,pos2);
+      start.now = c(pos1,pos2)
+      if (nrow(sv.ins >= 1)) {
+        pos1.ins <- sv.ins[sv.ins$chr1==chr.now]
+        start.now <- c(start.now, pos1.ins)
+      }
+      if (nrow(sv.sbe >= 1)) {
+        pos1.sbe <- sv.sbe[sv.sbe$chr1==chr.now]
+        start.now <- c(start.now, pos1.sbe)
+      }
       # which ones are numbers?
       idx= unlist(sapply(start.now, is.numeric))
       if(length(idx)>0){start.now=min(start.now[idx])}else{start.now=0}
@@ -425,7 +444,6 @@ ReConPlot <- function(sv,
       karyo.filt=rbind(karyo.filt,karyo_subset)
     }
     karyotype_data_now = karyo.filt
-
   }
   
   # cnv.plot$chr = cnv.plot$chr
@@ -491,11 +509,11 @@ ReConPlot <- function(sv,
 	#cnv.plot$chr_f = factor(as.vector(cnv.plot$chr), levels=chr_selection$chr)
 
 
-  # define the breaks on the y axis (cn) to show:
+  #define the breaks on the y axis (cn) to show:
    if (max.cn < 8) {break.step = 1}
    else if (max.cn >= 8 & max.cn <= 20) {break.step = 2}
    else if (max.cn > 20 & max.cn <= 50) {break.step = 5}
-   else (break.step = 10)
+   else {break.step = 10}
    breaks_y = seq(0,max.cn, break.step)
   # breaks_y = c(0,1,2)
   # breaks_y = c(breaks_y, unique(floor(quantile(2:max_y, probs = seq(.1, .9, by = .1)))))
@@ -631,9 +649,7 @@ ReConPlot <- function(sv,
   #----------------------------------------------------------------
   # plot interchr SVs involving chrs in levels_chrs
   #----------------------------------------------------------------
-
   if (interFlag){
-
     # # first those involving the middle chromosome  ## missing those with other chrs
     idx= which(interSV$chr1 %in% chr_selection$chr & interSV$chr2 %in% chr_selection$chr)
 
@@ -829,6 +845,52 @@ ReConPlot <- function(sv,
       }
     }
   }
+  #----------------------------------------------------------------------------
+  # plot SBE and insertions
+  #----------------------------------------------------------------------------  
+  if (nrow(sv.ins >= 1)){ 
+    for (i in 1:nrow(sv.ins)) {
+      min_coord = min(cnv.plot[cnv.plot$chr==sv.ins$chr1[i],"start"])
+      max_coord = max(cnv.plot[cnv.plot$chr==sv.ins$chr1[i],"end"])
+      # add max
+      sv.ins$max_y_sv = max_y_svs_3-size_interchr_SV_tip
+      # correct the arc;
+      # if one breakpoint outside or range, just plot a vertical line, if not the entire arc
+      if (sv.ins$pos1[i] >= min_coord & sv.ins$pos1[i] <= max_coord) { # within range
+        p = p +
+          # vertical
+          geom_curve(data = data.frame(cov = 1, chr = sv.ins$chr1[i]),
+                     x=sv.ins$pos1[i], xend=sv.ins$pos1[i],
+                     y=0, yend=sv.ins$max_y_sv[i], 
+                     curvature=0, size=size_sv_line, colour=sv.ins$colour[i]) +
+           geom_point(data= data.frame(cov = 1, chr = sv.ins$chr1[i]), 
+                      x= sv.ins$pos1[i], y = sv.ins$max_y_sv[i],
+                      size=1, shape = 24, colour="black", stroke = .1, fill = sv.ins$colour[i])
+    }}}
+  if (nrow(sv.sbe >= 1)){ 
+    for (i in 1:nrow(sv.sbe)) {
+      min_coord = min(cnv.plot[cnv.plot$chr==sv.sbe$chr1[i],"start"])
+      max_coord = max(cnv.plot[cnv.plot$chr==sv.sbe$chr1[i],"end"])
+      # add max
+      sv.sbe$max_y_sv = max_y_svs_3-size_interchr_SV_tip
+      # correct the arc;
+      # if one breakpoint outside or range, just plot a vertical line, if not the entire arc
+      if (sv.sbe$pos1[i] >= min_coord & sv.sbe$pos1[i] <= max_coord) { # within range
+        p = p +
+          # vertical
+          geom_curve(data = data.frame(cov = 1, chr = sv.sbe$chr1[i]),
+                     x=sv.sbe$pos1[i], xend=sv.sbe$pos1[i],
+                     y=0, yend=sv.sbe$max_y_sv[i], 
+                     curvature=0, size=size_sv_line, colour=sv.sbe$colour[i]) +
+          geom_point(data= data.frame(cov = 1, chr = sv.sbe$chr1[i]), 
+                     x= sv.sbe$pos1[i], y = sv.sbe$max_y_sv[i],
+                     size=1, shape = 22, colour="black", stroke = .1, fill = sv.sbe$colour[i])
+      }}}
+    
+    
+  
+  
+  
   #----------------------------------------------------------------------------
   # highlight genes
   #----------------------------------------------------------------------------
