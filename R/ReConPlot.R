@@ -259,6 +259,8 @@ ReConPlot <- function(sv,
   # process SV data
   #----------------------------------------------------------------
 
+  sv.ins=data.frame()
+  sv.sbe=data.frame()
   if (sum(sv$strands == "INS") >= 1) {
   sv.ins <- sv %>% filter(strands == "INS")
     sv.ins$colour <- colour_INS
