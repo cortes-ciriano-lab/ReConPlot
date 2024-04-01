@@ -343,11 +343,11 @@ ReConPlot <- function(sv,
       pos1 = sv$pos1[sv$chr1==chr.now]; if(length(pos1)>0){pos1=min(pos1)}
       pos2 = sv$pos2[sv$chr2==chr.now]; if(length(pos2)>0){pos2=min(pos2)}
       start.now = c(pos1,pos2)
-      if (nrow(sv.ins >= 1)) {
+      if (nrow(sv.ins) >= 1) {
         pos1.ins <- sv.ins[sv.ins$chr1==chr.now]
         start.now <- c(start.now, pos1.ins)
       }
-      if (nrow(sv.sbe >= 1)) {
+      if (nrow(sv.sbe) >= 1) {
         pos1.sbe <- sv.sbe[sv.sbe$chr1==chr.now]
         start.now <- c(start.now, pos1.sbe)
       }
