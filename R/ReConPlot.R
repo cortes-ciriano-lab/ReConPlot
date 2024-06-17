@@ -955,7 +955,7 @@ ReConPlot <- function(sv,
                                  pos=(gene_coord_now$start+gene_coord_now$end)/2, y= max_y_svs_4
           )
           p = p + geom_point(data= dat_text, mapping = aes(x= pos, y = max_y_svs_3-size_interchr_SV_tip),
-                             size=.5 ,colour="darkblue")
+                             size=0.5 , alpha=0.5, colour="darkblue")
           p = p + geom_text(data = dat_text, mapping = aes(x= pos, y = y, label = label), 
                             size=size_gene_label ,fontface="italic") 
           # add point
