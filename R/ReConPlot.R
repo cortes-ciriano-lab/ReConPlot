@@ -463,7 +463,7 @@ ReConPlot <- function(sv,
   max_y_svs_1 = max_y + (scaling_cn_SVs* max_y)
   max_y_svs_2 = max_y + 2*(scaling_cn_SVs* max_y)
   max_y_svs_3 = max_y + 2.5*(scaling_cn_SVs* max_y) # for the interchr with chrs not displayed
-  max_y_svs_4 = max_y + 3.25*(scaling_cn_SVs* max_y) # for the genes
+  max_y_svs_4 = max_y + 3*(scaling_cn_SVs* max_y) # for the genes
   
   # max_y_svs_1 = max_y - 0.5
   #------------------------------------------------------------------------------------
