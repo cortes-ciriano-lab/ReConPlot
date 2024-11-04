@@ -28,8 +28,11 @@ gene_coord_hg19$chr <- paste0("chr", gene_coord_hg19$chr)
 #T2T
 #cytobands_T2T.tsv
 library(tidyverse)
-karyotype_data_T2T = read_tsv("cytobands_T2T.tsv")
-names(karyotype_data_T2T)[1] = "chr"
+karyotype_data_T2T = read_tsv("cytobands_T2T.tsv") %>%
+  rename("chr"=chrom,
+         "start"=chromStart,
+         "end" = chromEnd)
+# names(karyotype_data_T2T)[1] = "chr"
 karyotype_data_T2T$color[karyotype_data_T2T$gieStain == "gneg"] = "white"
 karyotype_data_T2T$color[karyotype_data_T2T$gieStain == "gpos25"] = "grey75"
 karyotype_data_T2T$color[karyotype_data_T2T$gieStain == "gpos50"] = "grey50"
@@ -39,8 +42,8 @@ karyotype_data_T2T$color[karyotype_data_T2T$gieStain == "acen"] = "red"
 saveRDS(karyotype_data_T2T,file="cytobands_T2T.rds")
 
 gene_coord_T2T_raw = read_tsv("T2T_genes.tsv")
-gene_coord_T2T_f=gene_coord_T2T_raw[which(gene_coord_T2T_raw$V30 !="N/A"),]
-gene_coord_T2T_f=gene_coord_T2T_f[which(gene_coord_T2T_f$V18=="protein_coding"),]
+gene_coord_T2T_f=gene_coord_T2T_raw[which(gene_coord_T2T_raw$exonAnnotationSupport !="N/A"),]
+gene_coord_T2T_f=gene_coord_T2T_f[which(gene_coord_T2T_f$type=="protein_coding"),]
 gene_coord_T2T_ff=gene_coord_T2T_f[,c(1,2,3,13)]
 names(gene_coord_T2T_ff) = c("chr", "start", "end", "gene")
 gene_coord_T2T <- gene_coord_T2T_ff %>% 
@@ -60,7 +63,7 @@ karyotype_data_mm39$color[karyotype_data_mm39$gieStain == "gpos75"] = "grey25"
 karyotype_data_mm39$color[karyotype_data_mm39$gieStain == "gpos100"] = "grey0"
 karyotype_data_mm39$color[karyotype_data_mm39$gieStain == "acen"] = "red"
 gene_coord_mm39_raw = read_tsv("genes_mm39.tsv")
-gene_coord_mm39_f=gene_coord_mm39_raw[which(gene_coord_mm39_raw$V23=="protein_coding"),]
+gene_coord_mm39_f=gene_coord_mm39_raw[which(gene_coord_mm39_raw$transcriptType=="protein_coding"),]
 # gene_coord_mm39_f=gene_coord_mm39_raw[which(gene_coord_mm39_raw$V30 !="N/A"),]
 gene_coord_mm39_ff=gene_coord_mm39_f[,c(1,2,3,18)]
 names(gene_coord_mm39_ff) = c("chr", "start", "end", "gene")
